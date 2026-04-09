@@ -9,5 +9,8 @@ dependencies = ["textual>=1.0"]
 mcp = ["mcp>=1.0"]
 all = ["mcp>=1.0"]
 
+[tool.setuptools.package-data]
+codecritter = ["*.tcss"]
+
 [project.scripts]
 codecritter = "codecritter.__main__:main"
