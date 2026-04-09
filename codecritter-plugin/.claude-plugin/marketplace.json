@@ -1,0 +1,17 @@
+{
+  "name": "codecritter",
+  "owner": {
+    "name": "dkremer"
+  },
+  "metadata": {
+    "description": "Terminal companion with 18 species, animated statusline, reactions, TUI progression, and dungeon combat",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "codecritter",
+      "source": "./",
+      "description": "Terminal companion that trains alongside Claude Code sessions — species, reactions, statusline, and buddy skill"
+    }
+  ]
+}

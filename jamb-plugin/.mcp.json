@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "jamb": {
-      "command": "jamb",
-      "args": ["mcp"]
-    }
-  }
-}

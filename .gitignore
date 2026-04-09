@@ -3,4 +3,4 @@ __pycache__/
 *.egg-info/
 .DS_Store
 .claude
-jamb-plugin/.orphaned_at
+codecritter-plugin/.orphaned_at

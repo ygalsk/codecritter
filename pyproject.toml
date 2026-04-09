@@ -1,5 +1,5 @@
 [project]
-name = "jamb"
+name = "codecritter"
 version = "0.2.0"
 description = "Terminal companion with dungeon crawler — lives in Claude Code's statusline"
 requires-python = ">=3.12"
@@ -10,4 +10,4 @@ mcp = ["mcp>=1.0"]
 all = ["mcp>=1.0"]
 
 [project.scripts]
-jamb = "jamb.__main__:main"
+codecritter = "codecritter.__main__:main"

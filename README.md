@@ -1,6 +1,6 @@
-# Jamb
+# Codecritter
 
-A TUI dungeon crawler and companion system for [Claude Code](https://claude.com/claude-code). Your companion gains stats and XP automatically as you code — then take them dungeon crawling.
+A terminal companion and dungeon crawler for [Claude Code](https://claude.com/claude-code). Your companion gains stats and XP automatically as you code — then take them dungeon crawling.
 
 ```
     \^^^/
@@ -14,66 +14,87 @@ A TUI dungeon crawler and companion system for [Claude Code](https://claude.com/
 
 Requires Python 3.12+.
 
-### TUI Only
+### Quick Start (recommended)
+
+[pipx](https://pipx.pypa.io/) keeps dependencies isolated and puts `codecritter` on your PATH:
 
 ```bash
-pip install jamb
-jamb
+pipx install "codecritter[mcp]"
+codecritter setup
 ```
 
-### Full Claude Code Integration
+### With pip
 
 ```bash
-pip install "jamb[mcp]"
-jamb setup
+# Full install (TUI + Claude Code integration)
+pip install "codecritter[mcp]"
+codecritter setup
+
+# TUI only (no Claude Code integration)
+pip install codecritter
+codecritter
 ```
 
-`jamb setup` syncs your companion's species/rarity from your Claude Code account and bootstraps the art cache.
+### From Source (development)
 
-### Plugin Setup
+```bash
+git clone https://github.com/dkremer/codecritter.git
+cd codecritter
+pip install -e ".[mcp]"
+codecritter setup
+```
 
-After installing the Python package, add the Claude Code plugin for hooks (auto-rewards), reactions, and the statusline:
+## Plugin Setup
 
-1. Clone or download this repo
-2. Add to `~/.claude/settings.json`:
+The plugin adds automatic stat rewards, reactions, and the statusline. After installing the Python package:
+
+### 1. Register the plugin
+
+Add to `~/.claude/settings.json`:
 
 ```json
 {
   "plugins": {
-    "jamb": {
+    "codecritter": {
       "source": {
         "source": "directory",
-        "path": "/path/to/jamb-plugin"
+        "path": "/path/to/codecritter-plugin"
       }
     }
   }
 }
 ```
 
-3. Configure the animated statusline (optional):
+Replace `/path/to/codecritter-plugin` with the actual path to the `codecritter-plugin/` directory (from the repo or wherever you placed it).
+
+### 2. Enable the animated statusline (optional)
+
+Add to `~/.claude/settings.json`:
 
 ```json
 {
   "statusLine": {
     "type": "command",
-    "command": "/path/to/jamb-plugin/statusline/jamb-status.sh",
+    "command": "/path/to/codecritter-plugin/statusline/codecritter-status.sh",
     "refreshInterval": 1
   }
 }
 ```
 
-### Using pipx (recommended)
+### 3. Use the `/buddy` skill
 
-[pipx](https://pipx.pypa.io/) isolates dependencies and puts `jamb` on your PATH:
+Once the plugin is registered, you can interact with your companion directly in Claude Code:
 
-```bash
-pipx install "jamb[mcp]"
-jamb setup
-```
+- `/buddy` or `/buddy show` — Display companion card with ASCII art
+- `/buddy pet` — Pet your companion
+- `/buddy stats` — View full status
+- `/buddy sync` — Sync with native Claude Code buddy
+- `/buddy mute` / `unmute` — Toggle reactions
+- `/buddy rename NAME` — Rename companion
 
 ## How It Works
 
-Jamb hooks into Claude Code sessions. Every tool you use — `Bash`, `Edit`, `Grep`, `Write`, etc. — rewards your companion with stat points and XP. Your companion levels up, evolves, and gets stronger while you work.
+Codecritter hooks into Claude Code sessions. Every tool you use — `Bash`, `Edit`, `Grep`, `Write`, etc. — rewards your companion with stat points and XP. Your companion levels up, evolves, and gets stronger while you work.
 
 ### Hook Rewards
 
@@ -163,42 +184,31 @@ A daily rotating inventory of weapons, armor, consumables, and stat boosters. Hi
 ### MCP Server
 
 ```bash
-jamb mcp
+codecritter mcp
 ```
 
 Exposes tools for checking status, rewarding stats, triggering reactions, petting, and muting/unmuting your companion — all usable from within Claude Code.
 
 ### Statusline Speech Bubble
 
-Jamb integrates with the Claude Code statusline. A Stop hook extracts `<!-- buddy: ... -->` comments from assistant responses and displays them as speech bubbles. Reactions fire automatically on errors, test failures, large diffs, and other events.
-
-### Buddy Skill
-
-The `/buddy` skill routes commands to MCP tools:
-
-- `/buddy show` — Display companion card
-- `/buddy pet` — Pet your companion
-- `/buddy stats` — View full status
-- `/buddy sync` — Sync with native buddy
-- `/buddy mute` / `unmute` — Toggle reactions
-- `/buddy rename NAME` — Rename companion
+Codecritter integrates with the Claude Code statusline. A Stop hook extracts `<!-- buddy: ... -->` comments from assistant responses and displays them as speech bubbles. Reactions fire automatically on errors, test failures, large diffs, and other events.
 
 ## CLI Reference
 
 ```bash
-jamb                    # Launch TUI
-jamb setup              # Configure Claude Code integration
-jamb status             # Show stats, level, mood
-jamb status --json      # Full state as JSON
-jamb reward -s STAT -a AMOUNT -x XP   # Manual stat reward
-jamb sync               # Sync with native Claude Code buddy
-jamb rename NAME        # Rename your companion
-jamb react -r REASON    # Trigger a reaction
-jamb buddy-comment -t TEXT  # Set speech bubble text
-jamb mute / unmute      # Toggle reactions
-jamb pet                # Pet your companion
-jamb art-cache          # Regenerate statusline art cache
-jamb mcp                # Run MCP server
+codecritter                    # Launch TUI
+codecritter setup              # Configure Claude Code integration
+codecritter status             # Show stats, level, mood
+codecritter status --json      # Full state as JSON
+codecritter reward -s STAT -a AMOUNT -x XP   # Manual stat reward
+codecritter sync               # Sync with native Claude Code buddy
+codecritter rename NAME        # Rename your companion
+codecritter react -r REASON    # Trigger a reaction
+codecritter buddy-comment -t TEXT  # Set speech bubble text
+codecritter mute / unmute      # Toggle reactions
+codecritter pet                # Pet your companion
+codecritter art-cache          # Regenerate statusline art cache
+codecritter mcp                # Run MCP server
 ```
 
 ## Dependencies

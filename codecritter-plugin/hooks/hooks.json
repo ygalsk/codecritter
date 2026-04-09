@@ -1,0 +1,114 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat debugging --amount 1 --xp 2",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "codecritter hook-react",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat patience --amount 1 --xp 2",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat wisdom --amount 1 --xp 2",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat chaos --amount 1 --xp 2",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat snark --amount 1 --xp 2",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat snark --amount 1 --xp 1",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat wisdom --amount 1 --xp 1",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter reward --stat wisdom --amount 0 --xp 5",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter session-end",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codecritter hook-comment",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
