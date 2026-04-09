@@ -9,7 +9,7 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Label
 
-from ..constants import RARITY_COLORS
+from ..constants import C, RARITY_COLORS
 
 if TYPE_CHECKING:
     from ..app import JambApp
@@ -20,23 +20,28 @@ class LootScreen(Screen):
 
     def __init__(self, loot: dict, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._loot = loot  # {"item": dict, "gold": int} or {"items": [...], "gold": int, "xp": int}
+        self._loot = loot
 
     def compose(self) -> ComposeResult:
         loot = self._loot
 
-        with Vertical(classes="care-overlay"):
-            yield Label("  [bold #facc15]╔══ LOOT ══╗[/]", classes="header")
+        with Vertical(id="loot-box") as box:
+            box.border_title = " LOOT "
+
+            yield Label(f"  [{C.WARNING} bold]========  VICTORY  ========[/]", classes="mt1")
+            yield Label("")
 
             # Gold
             gold = loot.get("gold", 0)
             if gold > 0:
-                yield Label(f"  [#facc15 bold]+{gold} Gold[/]", classes="mt1")
+                yield Label(f"  [{C.WARNING} bold]+{gold} Gold[/]")
 
             # XP
             xp = loot.get("xp", 0)
             if xp > 0:
-                yield Label(f"  [#a78bfa bold]+{xp} XP[/]")
+                yield Label(f"  [{C.PRIMARY} bold]+{xp} XP[/]")
+
+            yield Label("")
 
             # Items
             items = loot.get("items", [])
@@ -44,17 +49,30 @@ class LootScreen(Screen):
                 items = [loot["item"]]
 
             if items:
+                yield Label(f"  [bold]Items found:[/]")
+                yield Label("")
                 for item in items:
                     color = RARITY_COLORS.get(item.get("rarity", ""), "white")
                     rarity = item.get("rarity", "").upper()
-                    yield Label(f"  [{color} bold]{item.get('name', '?')}[/] [{color}]({rarity})[/]", classes="mt1")
-                    yield Label(f"  [dim]{item.get('description', '')}[/]")
+                    yield Label(f"    [{color} bold]{item.get('name', '?')}[/]  [{color}]({rarity})[/]")
+                    desc = item.get("description", "")
+                    if desc:
+                        yield Label(f"    [{C.MUTED}]{desc}[/]")
+                    yield Label("")
 
-                yield Label("  [dim]Items added to inventory.[/]", classes="mt1")
+                yield Label(f"  [{C.MUTED}]Items added to inventory.[/]")
             else:
-                yield Label("  [dim]No items found.[/]", classes="mt1")
+                yield Label(f"  [{C.MUTED}]No items found.[/]")
 
-            yield Label("  [yellow bold]Press any key to continue[/]", classes="mt1")
+            # Dropped items warning
+            dropped = loot.get("_dropped", [])
+            if dropped:
+                yield Label("")
+                names = ", ".join(i.get("name", "?") for i in dropped)
+                yield Label(f"  [{C.ERROR} bold]Inventory full! Dropped: {names}[/]")
+
+            yield Label("")
+            yield Label(f"  [{C.ACCENT} bold]Press any key to continue[/]")
 
         yield Footer()
 

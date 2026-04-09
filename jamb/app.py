@@ -7,37 +7,36 @@ from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.containers import Vertical
 from textual.screen import Screen
+from textual.theme import Theme
 from textual.widgets import Footer, Label
 
 from . import persistence
 from .models import JambState
 from .screens.main_screen import MainScreen
-from .screens.training_screen import TrainingScreen
-from .screens.care_screen import CareOverlay
-from .screens.status_screen import StatusScreen
 from .screens.evolution_screen import EvolutionScreen
-from .screens.chat_screen import ChatScreen
-from .screens.achievements_screen import AchievementsScreen
 from .screens.dungeon_screen import DungeonScreen
 from .screens.battle_screen import BattleScreen
 from .screens.loot_screen import LootScreen
 from .screens.inventory_screen import InventoryScreen
 from .screens.shop_screen import ShopScreen
 from .dungeon.engine import CombatState, DungeonRun
-from .activities.debugging import BugHuntActivity
-from .activities.patience import MeditationActivity
-from .activities.chaos import ChaosRouletteActivity
-from .activities.wisdom import RiddleChallengeActivity
-from .activities.snark import ComebackBattleActivity
+from .widgets.ascii_art import SnailArt
+from .widgets.speech_bubble import SpeechBubble
 
-
-ACTIVITY_MAP = {
-    "debugging": BugHuntActivity,
-    "patience": MeditationActivity,
-    "chaos": ChaosRouletteActivity,
-    "wisdom": RiddleChallengeActivity,
-    "snark": ComebackBattleActivity,
-}
+JAMB_THEME = Theme(
+    name="jamb",
+    primary="#BB9AF7",
+    secondary="#7AA2F7",
+    accent="#FF9E64",
+    background="#1A1B26",
+    surface="#24283B",
+    panel="#414868",
+    foreground="#a9b1d6",
+    warning="#E0AF68",
+    error="#F7768E",
+    success="#9ECE6A",
+    dark=True,
+)
 
 
 class JambApp(App):
@@ -45,14 +44,13 @@ class JambApp(App):
 
     def __init__(self) -> None:
         super().__init__()
+        self.register_theme(JAMB_THEME)
+        self.theme = "jamb"
         self.state: JambState = persistence.load()
-        self._session_trains: dict[str, int] = {}
         self.dungeon_run: DungeonRun | None = None
         self._last_known_mtime: float = 0.0
-        self._saving: bool = False
 
     def on_mount(self) -> None:
-        self.state.roll_daily_challenge()
         self._save_and_track()
         self.push_screen(MainScreen())
         # Start animation timers
@@ -113,7 +111,6 @@ class JambApp(App):
         self._schedule_speech_rotation()
 
     def show_main(self) -> None:
-        # Pop all screens back to MainScreen (keep default + MainScreen)
         while len(self.screen_stack) > 2:
             self.pop_screen()
         main = self.screen
@@ -121,23 +118,6 @@ class JambApp(App):
             main.refresh_state()
         else:
             self.push_screen(MainScreen())
-
-        self._check_and_notify_achievements()
-
-    def show_training(self) -> None:
-        self._push_over_main(TrainingScreen())
-
-    def show_care(self, action: str) -> None:
-        self._push_over_main(CareOverlay(action))
-
-    def show_status(self) -> None:
-        self._push_over_main(StatusScreen())
-
-    def show_chat(self) -> None:
-        self._push_over_main(ChatScreen())
-
-    def show_achievements(self) -> None:
-        self._push_over_main(AchievementsScreen())
 
     def show_dungeon(self) -> None:
         if not self.dungeon_run:
@@ -162,9 +142,8 @@ class JambApp(App):
         for item in loot.get("items", []):
             if not self.state.inventory_add(item):
                 dropped.append(item)
-        if dropped:
-            names = ", ".join(i.get("name", "?") for i in dropped)
-            self.notify(f"Inventory full! Dropped: {names}", severity="warning", timeout=4)
+        # Pass dropped info to loot screen instead of using a toast
+        loot["_dropped"] = dropped
         self.state.gold += loot.get("gold", 0)
         if self.dungeon_run:
             self.dungeon_run.gold_earned += loot.get("gold", 0)
@@ -183,7 +162,6 @@ class JambApp(App):
     def combat_victory(self, xp: int, gold: int, loot: list[dict]) -> None:
         run = self.dungeon_run
         if run:
-            # Mark room cleared
             room = run.floor.current_room()
             room.cleared = True
             run.xp_earned += xp
@@ -193,21 +171,21 @@ class JambApp(App):
         self.state.add_xp(xp)
         self._save_and_track()
 
-        self.notify(
-            f"+{xp} XP  +{gold} Gold" + (f"  +{len(loot)} items!" if loot else ""),
-            title="Victory!",
-            timeout=3,
-        )
-
         if loot:
+            # Loot screen shows the full breakdown — no toast needed
             self.show_loot({"items": loot, "gold": gold, "xp": xp})
         else:
+            self.notify(
+                f"+{xp} XP  +{gold} Gold",
+                title="Victory!",
+                timeout=3,
+            )
             self.show_dungeon()
 
     def dungeon_death(self) -> None:
         run = self.dungeon_run
+        kept_xp = 0
         if run:
-            # Keep half the XP and gold earned
             kept_xp = run.xp_earned // 2
             self.state.add_xp(kept_xp)
             if run.floor.number > self.state.dungeon_highest_floor:
@@ -215,7 +193,7 @@ class JambApp(App):
         self.dungeon_run = None
         self._save_and_track()
         self.notify(
-            f"Jamb was defeated! Kept {kept_xp if run else 0} XP.",
+            f"Jamb was defeated! Kept {kept_xp} XP.",
             title="Dungeon Over",
             severity="warning",
             timeout=4,
@@ -234,138 +212,36 @@ class JambApp(App):
             self.notify("Fled the dungeon! XP and loot kept.", timeout=3)
         self.show_main()
 
-    def start_activity(self, stat_name: str) -> None:
-        if self.state.care.energy < 10:
-            self._show_too_tired()
-            return
-        cls = ACTIVITY_MAP.get(stat_name)
-        if not cls:
-            return
-        activity = cls(on_done=self._on_activity_done)
-        self._push_over_main(activity)
-
     def _push_over_main(self, screen) -> None:
         """Push a screen, popping any non-main screen first."""
         while len(self.screen_stack) > 2:
             self.pop_screen()
         self.push_screen(screen)
 
-    def _show_too_tired(self) -> None:
-        self._push_over_main(TooTiredScreen())
-
-    def _on_activity_done(self, stat_name: str, gain: int, xp: int) -> None:
-        # Diminishing returns based on session training count
-        self._session_trains[stat_name] = self._session_trains.get(stat_name, 0) + 1
-        count = self._session_trains[stat_name]
-        if count <= 2:
-            fatigue = 1.0
-        elif count <= 4:
-            fatigue = 0.75
-        elif count <= 6:
-            fatigue = 0.50
-        else:
-            fatigue = 0.25
-
-        multiplier = self.state.mood_multiplier() * fatigue
-        actual_gain = max(1, int(gain * multiplier))
-        actual_xp = max(1, int(xp * multiplier))
-
-        self.state.stats.add(stat_name, actual_gain, self.state.stat_cap())
-        evolved = self.state.add_xp(actual_xp)
-        self.state.total_trainings += 1
-
-        # Training costs a bit of energy
-        self.state.care.energy = max(0, self.state.care.energy - 5)
-        self.state.care.hunger = max(0, self.state.care.hunger - 3)
-        self.state.compute_mood()
-
-        self._save_and_track()
-
-        # Notify stat gain
-        self.notify(
-            f"+{actual_gain} {stat_name.upper()}  |  +{actual_xp} XP",
-            title="Training Complete!",
-            timeout=3,
-        )
-
-        # Advance daily challenge
-        daily_done = self.state.advance_daily("training")
-        if not daily_done:
-            daily_done = self.state.advance_daily(f"train_{stat_name}")
-        if daily_done:
-            self.award_daily_challenge()
-
-        self._check_and_notify_achievements()
-
-        if evolved:
-            self._push_over_main(EvolutionScreen(evolved))
-
-    def _check_and_notify_achievements(self) -> None:
-        new_achs = self.state.check_achievements()
-        if new_achs:
-            self._save_and_track()
-            for ach in new_achs:
-                self.notify(
-                    f"{ach['icon']} {ach['name']}",
-                    title="Achievement Unlocked!",
-                    timeout=4,
-                )
-
-    def award_daily_challenge(self) -> None:
-        """Award rewards for completing the daily challenge."""
-        challenge = self.state.get_daily_challenge()
-        if not challenge:
-            return
-        reward_xp = challenge.get("reward_xp", 0)
-        reward_stat = challenge.get("reward_stat")
-        if reward_xp:
-            self.state.add_xp(reward_xp)
-        if reward_stat:
-            self.state.stats.add(reward_stat, 3, self.state.stat_cap())
-        self._save_and_track()
-        self.notify(
-            f"Daily Challenge complete! +{reward_xp} XP"
-            + (f"  +3 {reward_stat.upper()}" if reward_stat else ""),
-            title="Daily Challenge!",
-            timeout=5,
-        )
-
     def _animate_snail(self) -> None:
         screen = self.screen
         if isinstance(screen, MainScreen):
             screen.animate_snail()
+            # Sync frame index to state for statusline
+            try:
+                snail = screen.query_one("#snail-art", SnailArt)
+                self.state.animation_frame = snail._frame_idx
+            except Exception:
+                pass
 
     def _rotate_speech(self) -> None:
         screen = self.screen
         if isinstance(screen, MainScreen):
             screen.rotate_speech()
+            # Sync current quip to state for statusline
+            try:
+                speech = screen.query_one("#speech-bubble", SpeechBubble)
+                text = str(speech.render()).strip().strip('"')
+                self.state.current_quip = text
+                self._save_and_track()
+            except Exception:
+                pass
 
     def save_and_quit(self) -> None:
         self._save_and_track()
         self.exit()
-
-
-class TooTiredScreen(Screen):
-    """Shown when Jamb is too tired to train."""
-
-    BINDINGS = [
-        ("r", "rest", "Rest"),
-        ("escape", "back", "Back"),
-    ]
-
-    def compose(self) -> ComposeResult:
-        app: JambApp = self.app  # type: ignore[assignment]
-        with Vertical(classes="care-overlay"):
-            yield Label("  [tomato bold]Jamb is too tired to train! Rest first.[/]")
-            yield Label(f"  Energy: {app.state.care.energy}% (need 10%)", classes="dim mt1")
-            yield Label("  [yellow bold]Press any key[/]", classes="mt1")
-
-        yield Footer()
-
-    def on_key(self, event) -> None:
-        app: JambApp = self.app  # type: ignore[assignment]
-        key = event.character or event.key
-        if key in ("r", "R"):
-            app.show_care("rest")
-        else:
-            app.show_main()

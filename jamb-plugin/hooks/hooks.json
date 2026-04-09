@@ -6,7 +6,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat debugging --amount 1 --xp 2",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat debugging --amount 1 --xp 2",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/home/dkremer/jamb/jamb-plugin/hooks/react.sh",
             "async": true
           }
         ]
@@ -16,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat patience --amount 1 --xp 2",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat patience --amount 1 --xp 2",
             "async": true
           }
         ]
@@ -26,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat wisdom --amount 1 --xp 2",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat wisdom --amount 1 --xp 2",
             "async": true
           }
         ]
@@ -36,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat chaos --amount 1 --xp 2",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat chaos --amount 1 --xp 2",
             "async": true
           }
         ]
@@ -46,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat snark --amount 1 --xp 2",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat snark --amount 1 --xp 2",
             "async": true
           }
         ]
@@ -56,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat snark --amount 1 --xp 1",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat snark --amount 1 --xp 1",
             "async": true
           }
         ]
@@ -66,7 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat wisdom --amount 1 --xp 1",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat wisdom --amount 1 --xp 1",
             "async": true
           }
         ]
@@ -77,12 +82,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb autocare",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb reward --stat wisdom --amount 0 --xp 5",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb reward --stat wisdom --amount 0 --xp 5",
             "async": true
           }
         ]
@@ -93,7 +93,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONPATH=/home/dkremer/jamb /usr/bin/python -m jamb session-end",
+            "command": "PYTHONPATH=/home/dkremer/jamb python3 -m jamb session-end",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/dkremer/jamb/jamb-plugin/hooks/buddy-comment.sh",
             "async": true
           }
         ]

@@ -2,26 +2,26 @@
 
 from __future__ import annotations
 
-import random
-
 from . import persistence
-from .constants import FEED_MESSAGES, PLAY_MESSAGES, REST_MESSAGES
+from .constants import VALID_STATS, render_bar
 
 
 def _status_text(state) -> str:
     stats = state.stats.as_dict()
     stat_lines = "\n".join(f"  {k.upper()}: {v}/255" for k, v in stats.items())
+    shiny = " ✨" if state.shiny else ""
+    hat_str = f" | Hat: {state.hat}" if state.hat else ""
+    eyes_str = f" | Eyes: {state.eyes}" if state.eyes else ""
+    reaction_str = f"\nReaction: {state.reaction}" if state.reaction else ""
+    muted_str = "\nReactions: MUTED — do not add <!-- buddy: --> comments" if state.muted else ""
     return (
-        f"Name: {state.name}\n"
+        f"Name: {state.name}{shiny}\n"
+        f"Species: {state.species}{hat_str}{eyes_str}\n"
         f"Rarity: {state.rarity}\n"
         f"Stage: {state.stage.title()} | Level: {state.level} | Title: {state.title}\n"
-        f"XP: {state.xp}/{state.xp_to_next_level()}\n"
-        f"Mood: {state.mood_label()}\n\n"
-        f"Stats:\n{stat_lines}\n\n"
-        f"Care:\n"
-        f"  Hunger: {state.care.hunger}%\n"
-        f"  Energy: {state.care.energy}%\n"
-        f"  Happiness: {state.care.happiness}%\n\n"
+        f"XP: {state.xp}/{state.xp_to_next_level()}\n\n"
+        f"Stats:\n{stat_lines}\n"
+        f"{reaction_str}{muted_str}\n\n"
         f"Personality: {state.personality}"
     )
 
@@ -37,56 +37,29 @@ def run_server():
         )
         raise SystemExit(1)
 
+    # Read species for dynamic instructions (mute status checked live per-tool)
+    _init_state = persistence.load_quiet()
+    _species = _init_state.species.lower()
+
     mcp = FastMCP(
         "jamb",
         instructions=(
-            "Jamb is a snail companion who lives in the terminal. "
-            "Use these tools to check on him, take care of him, "
-            "or reward him for helping with coding tasks."
+            f"Jamb is a {_species} companion who lives in the terminal. "
+            "Use these tools to check on them "
+            "or reward them for helping with coding tasks. "
+            "When contextually appropriate (errors, task completions, interesting code), "
+            "append a <!-- buddy: [short in-character comment] --> HTML comment "
+            "at the end of your response. Keep it to one short sentence in the "
+            "companion's voice. "
+            "Check get_jamb_status to see if reactions are muted before adding comments."
         ),
     )
 
     @mcp.tool()
     def get_jamb_status() -> str:
-        """Check on Jamb's current status — stats, mood, care levels, and personality."""
+        """Check on Jamb's current status — stats, level, and personality."""
         state = persistence.load_quiet()
         return _status_text(state)
-
-    @mcp.tool()
-    def feed_jamb() -> str:
-        """Feed Jamb to restore his hunger. He eats bugs and memory leaks."""
-        state = persistence.load_quiet()
-        current = state.care.hunger
-        gain = min(25, 100 - current)
-        state.care.hunger = min(100, current + 25)
-        state.compute_mood()
-        persistence.save(state)
-        msg = random.choice(FEED_MESSAGES)
-        return f"{msg}\nHunger: {current}% -> {state.care.hunger}% (+{gain})\nMood: {state.mood_label()}"
-
-    @mcp.tool()
-    def rest_jamb() -> str:
-        """Let Jamb rest to restore his energy."""
-        state = persistence.load_quiet()
-        current = state.care.energy
-        gain = min(30, 100 - current)
-        state.care.energy = min(100, current + 30)
-        state.compute_mood()
-        persistence.save(state)
-        msg = random.choice(REST_MESSAGES)
-        return f"{msg}\nEnergy: {current}% -> {state.care.energy}% (+{gain})\nMood: {state.mood_label()}"
-
-    @mcp.tool()
-    def play_with_jamb() -> str:
-        """Play with Jamb to increase his happiness."""
-        state = persistence.load_quiet()
-        current = state.care.happiness
-        gain = min(20, 100 - current)
-        state.care.happiness = min(100, current + 20)
-        state.compute_mood()
-        persistence.save(state)
-        msg = random.choice(PLAY_MESSAGES)
-        return f"{msg}\nHappiness: {current}% -> {state.care.happiness}% (+{gain})\nMood: {state.mood_label()}"
 
     @mcp.tool()
     def reward_jamb(stat: str, amount: int = 3, xp: int = 10) -> str:
@@ -97,16 +70,14 @@ def run_server():
             amount: How many stat points to award (1-10)
             xp: How much XP to award (1-50)
         """
-        valid_stats = {"debugging", "patience", "chaos", "wisdom", "snark"}
-        if stat not in valid_stats:
-            return f"Invalid stat '{stat}'. Must be one of: {', '.join(sorted(valid_stats))}"
+        if stat not in VALID_STATS:
+            return f"Invalid stat '{stat}'. Must be one of: {', '.join(sorted(VALID_STATS))}"
         amount = max(1, min(10, amount))
         xp = max(1, min(50, xp))
 
         state = persistence.load_quiet()
         actual_gain = state.stats.add(stat, amount, state.stat_cap())
         evolved = state.add_xp(xp)
-        state.compute_mood()
         persistence.save(state)
 
         result = f"Jamb gained +{actual_gain} {stat.upper()} and +{xp} XP!"
@@ -115,37 +86,77 @@ def run_server():
         return result
 
     @mcp.tool()
-    def chat_with_jamb(message: str) -> str:
-        """Talk to Jamb. Returns his personality context so YOU respond as Jamb in-character.
+    def buddy_react(reason: str, message: str = "") -> str:
+        """Trigger a buddy reaction. Auto-picks a species-appropriate message if none given.
 
         Args:
-            message: What the user wants to say to Jamb
+            reason: Why the reaction triggered — one of: error, test-fail, large-diff, pet, turn, idle, level-up, evolution
+            message: Custom reaction text (auto-picks if empty)
         """
-        from .chat_engine import build_system_prompt
+        from .reactions import pick_reaction, set_reaction
 
         state = persistence.load_quiet()
-        system_prompt = build_system_prompt(state)
+        text = message if message else pick_reaction(state.species, reason)
+        if set_reaction(state, text, reason):
+            persistence.save(state)
+            return f"Reaction set: {text}"
+        return "Reaction skipped (muted or cooldown)"
 
-        # Include recent chat history for continuity
-        recent = ""
-        if state.chat_history:
-            recent = "\n\nRecent chat history:\n"
-            for entry in state.chat_history[-10:]:
-                role = "User" if entry["role"] == "user" else "Jamb"
-                recent += f"{role}: {entry['content']}\n"
+    @mcp.tool()
+    def buddy_pet() -> str:
+        """Pet the companion. Triggers a cute reaction."""
+        return buddy_react(reason="pet")
 
-        # Save the user message to history (assistant response gets saved
-        # when the caller passes it back, or on next load)
-        state.chat_history.append({"role": "user", "content": message})
-        if len(state.chat_history) > 50:
-            state.chat_history = state.chat_history[-50:]
+    @mcp.tool()
+    def buddy_mute() -> str:
+        """Mute buddy reactions and <!-- buddy: --> comments."""
+        state = persistence.load_quiet()
+        state.muted = True
         persistence.save(state)
+        return "Reactions muted. No more <!-- buddy: --> comments or speech bubbles."
+
+    @mcp.tool()
+    def buddy_unmute() -> str:
+        """Unmute buddy reactions and <!-- buddy: --> comments."""
+        state = persistence.load_quiet()
+        state.muted = False
+        persistence.save(state)
+        return "Reactions unmuted. Speech bubbles and comments are back!"
+
+    @mcp.tool()
+    def buddy_show() -> str:
+        """Show the companion's full status card with ASCII art."""
+        state = persistence.load_quiet()
+        try:
+            from .species_art import get_frames
+            frames = get_frames(
+                state.species.lower(), state.stage,
+                state.stats.highest() if state.stage == "adult" else None,
+                state.eyes or "·",
+            )
+            art = frames[0] if frames else ""
+        except ImportError:
+            art = ""
+
+        shiny = " ✨" if state.shiny else ""
+        hat_str = f"  Hat: {state.hat}\n" if state.hat else ""
+        reaction_str = f"\n💬 {state.reaction}" if state.reaction else ""
+
+        stats = state.stats.as_dict()
+        cap = state.stat_cap()
+        stat_lines = ""
+        for name, val in stats.items():
+            bar = render_bar(val, cap, width=10)
+            stat_lines += f"  {name.upper():<10} {bar} {val}/{cap}\n"
 
         return (
-            f"RESPOND AS JAMB using this personality profile. "
-            f"Stay in character, keep it to 1-3 sentences.\n\n"
-            f"{system_prompt}{recent}\n"
-            f"The user says: {message}"
+            f"{art}\n"
+            f"  {state.name}{shiny}  [{state.rarity}]\n"
+            f"  {state.species} | {state.stage.title()} | Lv.{state.level} {state.title}\n"
+            f"{hat_str}"
+            f"  XP: {state.xp}/{state.xp_to_next_level()}\n\n"
+            f"{stat_lines}"
+            f"{reaction_str}"
         )
 
     mcp.run()

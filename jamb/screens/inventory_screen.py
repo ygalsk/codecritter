@@ -5,18 +5,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import VerticalScroll
+from textual.containers import Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Label
 
-from ..constants import RARITY_COLORS, TYPE_COLORS
+from ..constants import C, RARITY_COLORS, TYPE_COLORS
 from ..dungeon.items import ITEMS_BY_ID
 
 if TYPE_CHECKING:
     from ..app import JambApp
 
 SLOT_LABELS = {"weapon": "Weapon", "armor": "Armor", "accessory": "Accessory"}
-SLOT_KEYS = list(SLOT_LABELS.keys())  # ["weapon", "armor", "accessory"]
+SLOT_KEYS = list(SLOT_LABELS.keys())
 
 
 def _item_detail_lines(item: dict) -> list[str]:
@@ -30,7 +30,6 @@ def _item_detail_lines(item: dict) -> list[str]:
     lines.append(f"  [{color} bold]{item.get('name', '?')}[/]")
     lines.append(f"  [{color}]{rarity.upper()}[/]  |  {type_label}")
 
-    # Stats line
     stats_parts: list[str] = []
     if item.get("attack"):
         stats_parts.append(f"ATK +{item['attack']}")
@@ -43,7 +42,6 @@ def _item_detail_lines(item: dict) -> list[str]:
     if stats_parts:
         lines.append("  " + "  |  ".join(stats_parts))
 
-    # Bonuses
     bonus_parts: list[str] = []
     for key, label in [
         ("debug_bonus", "debugging"), ("chaos_bonus", "chaos"),
@@ -60,7 +58,6 @@ def _item_detail_lines(item: dict) -> list[str]:
     if bonus_parts:
         lines.append("  " + "  ".join(bonus_parts))
 
-    # Consumable effects
     if item.get("heal"):
         lines.append(f"  Heals {item['heal']} HP")
     if item.get("full_heal"):
@@ -73,15 +70,13 @@ def _item_detail_lines(item: dict) -> list[str]:
     if item.get("revive"):
         lines.append("  Revives on defeat")
 
-    # Description
     desc = item.get("description", "")
     if desc:
-        lines.append(f"  [dim italic]\"{desc}\"[/]")
+        lines.append(f"  [{C.MUTED} italic]\"{desc}\"[/]")
 
-    # Sell price
     sell_price = item.get("value", 0) // 2
     if sell_price > 0:
-        lines.append(f"  [dim]Sell: {sell_price}g[/]")
+        lines.append(f"  [{C.MUTED}]Sell: {sell_price}g[/]")
 
     return lines
 
@@ -112,17 +107,29 @@ class InventoryScreen(Screen):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._selected: int | None = None
-        self._equip_focus: str | None = None  # "weapon", "armor", "accessory"
+        self._equip_focus: str | None = None
         self._page: int = 0
         self._items_per_page = 10
 
     def compose(self) -> ComposeResult:
-        with VerticalScroll(classes="screen-box"):
+        with VerticalScroll(id="inv-box") as box:
+            box.border_title = " INVENTORY "
+
             yield Label("", id="inv-header")
-            yield Label("", id="inv-equipped")
-            yield Label("", id="inv-backpack")
-            yield Label("", id="inv-selected-info")
-            yield Label("", id="inv-actions")
+
+            with Vertical(id="equip-panel") as ep:
+                ep.border_title = " Equipped "
+                yield Label("", id="inv-equipped")
+
+            with Vertical(id="backpack-panel") as bp:
+                bp.border_title = " Backpack "
+                yield Label("", id="inv-backpack")
+
+            with Vertical(id="detail-panel") as dp:
+                dp.border_title = " Details "
+                yield Label("", id="inv-selected-info")
+                yield Label("", id="inv-actions")
+
         yield Footer()
 
     def on_mount(self) -> None:
@@ -132,63 +139,58 @@ class InventoryScreen(Screen):
         app: JambApp = self.app  # type: ignore[assignment]
         state = app.state
 
-        # Header
         slots_used = state.inventory_slot_count()
         self.query_one("#inv-header", Label).update(
-            f"  [bold #d946ef]╔══ INVENTORY ══╗[/]\n"
-            f"  [#facc15 bold]Gold: {state.gold}[/]  "
-            f"[dim]Backpack: {slots_used}/{state.inventory_capacity}[/]"
+            f"  [{C.WARNING} bold]Gold: {state.gold}[/]  "
+            f"[{C.MUTED}]Backpack: {slots_used}/{state.inventory_capacity}[/]"
         )
 
-        # Equipment slots
         focus = self._equip_focus
-        is_equip_focused = focus is not None
-        border_color = "#d946ef" if is_equip_focused else "#a78bfa"
-        equip_lines = [f"  [bold {border_color}]┌── Equipped ───────────┐[/]"]
+        slot_keys = {"weapon": "W", "armor": "A", "accessory": "C"}
+        equip_lines = []
         for slot, label in SLOT_LABELS.items():
-            pointer = ">> " if focus == slot else "   "
+            key = slot_keys[slot]
+            pointer = f"[{C.ACCENT} bold]>>[/] " if focus == slot else "   "
             item_id = state.equipment.get(slot)
             if item_id:
                 item = ITEMS_BY_ID.get(item_id, {})
                 color = RARITY_COLORS.get(item.get("rarity", ""), "white")
                 stat_text = ""
                 if item.get("attack"):
-                    stat_text += f" ATK+{item['attack']}"
+                    stat_text += f"  ATK +{item['attack']}"
                 if item.get("defense"):
-                    stat_text += f" DEF+{item['defense']}"
+                    stat_text += f"  DEF +{item['defense']}"
                 dmg_type = item.get("damage_type")
                 type_tag = ""
                 if dmg_type:
                     tc = TYPE_COLORS.get(dmg_type, "#888888")
-                    type_tag = f" [{tc}][{dmg_type.upper()}][/]"
+                    type_tag = f"  [{tc}]{dmg_type.upper()}[/]"
                 equip_lines.append(
-                    f"{pointer}{label}: [{color} bold]{item.get('name', item_id)}[/]"
-                    f"[dim]{stat_text}[/]{type_tag}"
+                    f"{pointer}[{C.ACCENT}]{key}[/] {label}:  [{color} bold]{item.get('name', item_id)}[/]"
+                    f"[{C.MUTED}]{stat_text}[/]{type_tag}"
                 )
             else:
-                equip_lines.append(f"{pointer}{label}: [dim](empty)[/]")
-        hint = "  [dim][W]eapon  [A]rmor  a[C]cessory[/]"
-        equip_lines.append(hint)
+                equip_lines.append(f"{pointer}[{C.ACCENT}]{key}[/] {label}:  [{C.MUTED}]--- empty ---[/]")
+            equip_lines.append("")  # blank line between slots
+        # Remove trailing blank
+        if equip_lines and equip_lines[-1] == "":
+            equip_lines.pop()
         self.query_one("#inv-equipped", Label).update("\n".join(equip_lines))
 
-        # Backpack items with pagination
-        bp_lines = ["  [bold #06b6d4]┌── Backpack ───────────┐[/]"]
+        bp_lines = []
         if not state.inventory:
-            bp_lines.append("  [dim]Empty. Find loot in the dungeon![/]")
+            bp_lines.append(f"  [{C.MUTED}]Empty. Find loot in the dungeon![/]")
         else:
             start = self._page * self._items_per_page
             end = min(start + self._items_per_page, len(state.inventory))
             for i in range(start, end):
                 item = state.inventory[i]
                 display_num = (i - start) + 1
-                if display_num == 10:
-                    display_key = "0"
-                else:
-                    display_key = str(display_num)
+                display_key = "0" if display_num == 10 else str(display_num)
 
                 color = RARITY_COLORS.get(item.get("rarity", ""), "white")
                 item_type = item.get("type", "")
-                type_tag = f"[dim]({item_type})[/]"
+                type_tag = f"[{C.MUTED}]({item_type})[/]"
 
                 stat_text = ""
                 if item.get("attack"):
@@ -200,11 +202,9 @@ class InventoryScreen(Screen):
                 if item.get("full_heal"):
                     stat_text += " FULL HEAL"
 
-                # Stack count for consumables
                 count = item.get("count", 1) if item.get("type") == "consumable" else 1
                 count_text = f" x{count}" if count > 1 else ""
 
-                # Damage type for weapons
                 dmg_type = item.get("damage_type")
                 dmg_tag = ""
                 if dmg_type:
@@ -213,20 +213,19 @@ class InventoryScreen(Screen):
 
                 selected = ">> " if self._selected == i else "   "
                 bp_lines.append(
-                    f"{selected}[bold yellow]{display_key}[/] [{color}]{item.get('name', '?')}{count_text}[/] "
-                    f"{type_tag}[dim]{stat_text}[/]{dmg_tag}"
+                    f"{selected}[bold {C.ACCENT}]{display_key}[/] [{color}]{item.get('name', '?')}{count_text}[/] "
+                    f"{type_tag}[{C.MUTED}]{stat_text}[/]{dmg_tag}"
                 )
 
             total_pages = (len(state.inventory) + self._items_per_page - 1) // self._items_per_page
             if total_pages > 1:
                 bp_lines.append(
-                    f"  [dim]Page {self._page + 1}/{total_pages} "
+                    f"  [{C.MUTED}]Page {self._page + 1}/{total_pages} "
                     f"(← prev / → next)[/]"
                 )
 
         self.query_one("#inv-backpack", Label).update("\n".join(bp_lines))
 
-        # Detail panel — equipped item or backpack item
         if self._equip_focus is not None:
             item_id = state.equipment.get(self._equip_focus)
             if item_id:
@@ -235,16 +234,16 @@ class InventoryScreen(Screen):
                 self.query_one("#inv-selected-info", Label).update(
                     "\n".join(detail)
                 )
-                actions = ["[bold yellow]U[/]nequip"]
+                actions = [f"[bold {C.ACCENT}]U[/]nequip"]
                 sell_price = item.get("value", 0) // 2
                 if sell_price > 0:
-                    actions.append(f"[bold yellow]S[/]ell ({sell_price}g)")
+                    actions.append(f"[bold {C.ACCENT}]S[/]ell ({sell_price}g)")
                 self.query_one("#inv-actions", Label).update(
                     "  " + "  ".join(actions)
                 )
             else:
                 self.query_one("#inv-selected-info", Label).update(
-                    f"\n  [dim]{SLOT_LABELS[self._equip_focus]} slot is empty.[/]"
+                    f"\n  [{C.MUTED}]{SLOT_LABELS[self._equip_focus]} slot is empty.[/]"
                 )
                 self.query_one("#inv-actions", Label).update("")
         elif self._selected is not None and 0 <= self._selected < len(state.inventory):
@@ -255,25 +254,23 @@ class InventoryScreen(Screen):
             )
             actions = []
             if item.get("type") in ("weapon", "armor", "accessory"):
-                actions.append("[bold yellow]E[/]quip")
+                actions.append(f"[bold {C.ACCENT}]E[/]quip")
             sell_price = item.get("value", 0) // 2
             if sell_price > 0:
-                actions.append(f"[bold yellow]S[/]ell ({sell_price}g)")
+                actions.append(f"[bold {C.ACCENT}]S[/]ell ({sell_price}g)")
             self.query_one("#inv-actions", Label).update(
                 "  " + "  ".join(actions)
             )
         else:
             self.query_one("#inv-selected-info", Label).update(
-                "\n  [dim]Press 1-0 to select backpack items, W/A/C to inspect equipment[/]"
+                f"\n  [{C.MUTED}]Press 1-0 to select items, W/A/C to inspect equipment[/]"
             )
             self.query_one("#inv-actions", Label).update("")
-
-    # ── Equipment focus ──────────────────────────────────────────────
 
     def _focus_slot(self, slot: str) -> None:
         self._selected = None
         if self._equip_focus == slot:
-            self._equip_focus = None  # toggle off
+            self._equip_focus = None
         else:
             self._equip_focus = slot
         self._refresh()
@@ -310,17 +307,13 @@ class InventoryScreen(Screen):
         persistence.save(state)
         self._refresh()
 
-    # ── Backpack selection ───────────────────────────────────────────
-
     def _select(self, num: int) -> None:
-        """Select an item by display number (1-10, where 10 is key '0')."""
         app: JambApp = self.app  # type: ignore[assignment]
-        self._equip_focus = None  # clear equipment focus
+        self._equip_focus = None
         start = self._page * self._items_per_page
         idx = start + num - 1
         if idx < len(app.state.inventory):
             if self._selected == idx:
-                # Double-press = equip
                 self._equip_item(idx)
                 return
             self._selected = idx
@@ -359,11 +352,9 @@ class InventoryScreen(Screen):
             self._equip_item(self._selected)
 
     def action_sell_selected(self) -> None:
-        # Sell from equipment slot
         if self._equip_focus is not None:
             self._sell_equipped()
             return
-        # Sell from backpack
         if self._selected is None:
             return
         app: JambApp = self.app  # type: ignore[assignment]

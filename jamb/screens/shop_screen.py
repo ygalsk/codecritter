@@ -6,12 +6,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import VerticalScroll
+from textual.containers import Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from .. import persistence
-from ..constants import RARITY_COLORS
+from ..constants import C, RARITY_COLORS
 from ..shop import generate_daily_shop, max_tier_for_level
 
 if TYPE_CHECKING:
@@ -33,10 +33,17 @@ class ShopScreen(Screen):
         self._shop_items: list[dict] = []
 
     def compose(self) -> ComposeResult:
-        with VerticalScroll(id="shop-box"):
+        with VerticalScroll(id="shop-box") as box:
+            box.border_title = " SHOP "
+
             yield Label("", id="shop-header")
-            yield Label("", id="shop-items")
+
+            with Vertical(id="shop-items-panel") as sp:
+                sp.border_title = " Stock "
+                yield Label("", id="shop-items")
+
             yield Label("", id="shop-footer")
+
         yield Footer()
 
     def on_mount(self) -> None:
@@ -53,10 +60,9 @@ class ShopScreen(Screen):
         today = datetime.now().strftime("%b %d")
 
         self.query_one("#shop-header", Label).update(
-            f"  [bold #facc15]╔══ SHOP ══╗[/]\n"
-            f"  [#facc15 bold]Gold: {state.gold}[/]  "
-            f"[dim]Tier: {tier_labels.get(tier, '?')} (Lv.{state.level})[/]  "
-            f"[dim]Refreshes daily — {today}[/]"
+            f"  [{C.WARNING} bold]Gold: {state.gold}[/]  "
+            f"[{C.MUTED}]Tier: {tier_labels.get(tier, '?')} (Lv.{state.level})[/]  "
+            f"[{C.MUTED}]Refreshes daily  {today}[/]"
         )
 
         lines = []
@@ -66,43 +72,39 @@ class ShopScreen(Screen):
             num = i + 1
             color = RARITY_COLORS.get(item.get("rarity", ""), "white")
             price = item["price"]
-            affordable = "[#22c55e]" if state.gold >= price else "[#ef4444]"
+            affordable = f"[{C.SUCCESS}]" if state.gold >= price else f"[{C.ERROR}]"
 
             type_tag = ""
-            if item["type"] == "care":
-                stat = item.get("care_stat", "")
-                amt = item.get("care_amount", 0)
-                type_tag = f"[dim]+{amt} {stat.title()}[/]"
-            elif item["type"] == "stat_boost":
+            if item["type"] == "stat_boost":
                 stat = item.get("boost_stat", "")
                 amt = item.get("boost_amount", 0)
-                type_tag = f"[dim]+{amt} {stat.upper()} permanent[/]"
+                type_tag = f"[{C.MUTED}]+{amt} {stat.upper()} permanent[/]"
             elif item["type"] == "xp_boost":
-                type_tag = f"[dim]+{item.get('xp_amount', 0)} XP[/]"
+                type_tag = f"[{C.MUTED}]+{item.get('xp_amount', 0)} XP[/]"
             elif item["type"] == "consumable":
                 if item.get("heal"):
-                    type_tag = f"[dim]HP+{item['heal']}[/]"
+                    type_tag = f"[{C.MUTED}]HP+{item['heal']}[/]"
                 elif item.get("full_heal"):
-                    type_tag = "[dim]FULL HEAL[/]"
+                    type_tag = f"[{C.MUTED}]FULL HEAL[/]"
                 elif item.get("attack_buff"):
-                    type_tag = f"[dim]ATK+{item['attack_buff']} {item.get('turns', 3)}t[/]"
+                    type_tag = f"[{C.MUTED}]ATK+{item['attack_buff']} {item.get('turns', 3)}t[/]"
                 elif item.get("revive"):
-                    type_tag = "[dim]REVIVE[/]"
+                    type_tag = f"[{C.MUTED}]REVIVE[/]"
             elif item["type"] == "backpack":
-                type_tag = f"[dim]Expand to {item.get('capacity_to', '?')} slots[/]"
-                # Hide if already have this capacity
+                type_tag = f"[{C.MUTED}]Expand to {item.get('capacity_to', '?')} slots[/]"
                 if state.inventory_capacity >= item.get("capacity_to", 0):
-                    type_tag = "[dim](Already owned)[/]"
+                    type_tag = f"[{C.MUTED}](Already owned)[/]"
 
             lines.append(
-                f"  [bold yellow]{num}[/] [{color}]{item['name']}[/]  "
-                f"{affordable}{price}g[/]  {type_tag}"
+                f"  [bold {C.ACCENT}]{num}[/]  [{color} bold]{item['name']}[/]    "
+                f"{affordable}{price}g[/]    {type_tag}"
             )
-            lines.append(f"    [dim]{item['description']}[/]")
+            lines.append(f"     [{C.MUTED}]{item['description']}[/]")
+            lines.append("")  # breathing room
 
         self.query_one("#shop-items", Label).update("\n".join(lines))
         self.query_one("#shop-footer", Label).update(
-            "  [dim]Press 1-9 to buy.[/]"
+            f"  [{C.MUTED}]Press 1-9 to buy.[/]"
         )
 
     def _buy(self, num: int) -> None:
@@ -128,20 +130,6 @@ class ShopScreen(Screen):
             state.gold -= price
             state.inventory_capacity = target
             app.notify(f"Backpack upgraded to {target} slots!", timeout=3)
-        elif item["type"] == "care":
-            state.gold -= price
-            if item.get("care_stat") == "all":
-                amt = item.get("care_amount", 0)
-                state.care.hunger = min(100, state.care.hunger + amt)
-                state.care.energy = min(100, state.care.energy + amt)
-                state.care.happiness = min(100, state.care.happiness + amt)
-            else:
-                attr = item.get("care_stat", "")
-                amt = item.get("care_amount", 0)
-                current = getattr(state.care, attr, 0)
-                setattr(state.care, attr, min(100, current + amt))
-            state.compute_mood()
-            app.notify(f"Used {item['name']}!", timeout=2)
         elif item["type"] == "stat_boost":
             state.gold -= price
             stat = item.get("boost_stat", "")

@@ -9,11 +9,6 @@ from datetime import datetime
 # Tier 1: Level 1+, Tier 2: Level 5+, Tier 3: Level 10+
 
 SHOP_POOL: list[dict] = [
-    # === TIER 1 — Care items ===
-    {"id": "gourmet_bug", "name": "Gourmet Bug Platter", "type": "care", "rarity": "common", "care_stat": "hunger", "care_amount": 40, "price": 15, "description": "A fancy plate of memory leaks and null pointers. Delicious.", "tier": 1, "category": "care"},
-    {"id": "power_nap_pod", "name": "Power Nap Pod", "type": "care", "rarity": "common", "care_stat": "energy", "care_amount": 50, "price": 20, "description": "A warm server rack to sleep on. Recharges fast.", "tier": 1, "category": "care"},
-    {"id": "arcade_token", "name": "Arcade Token", "type": "care", "rarity": "common", "care_stat": "happiness", "care_amount": 35, "price": 12, "description": "One round of Pac-Man in the break room.", "tier": 1, "category": "care"},
-
     # === TIER 1 — Stat boosters ===
     {"id": "debug_manual", "name": "Debugging Manual", "type": "stat_boost", "rarity": "uncommon", "boost_stat": "debugging", "boost_amount": 5, "price": 50, "description": "A thick book of debugging techniques. +5 DEBUGGING permanently.", "tier": 1, "category": "boost"},
     {"id": "meditation_cd", "name": "Meditation CD", "type": "stat_boost", "rarity": "uncommon", "boost_stat": "patience", "boost_amount": 5, "price": 50, "description": "Whale sounds and refactoring tips. +5 PATIENCE permanently.", "tier": 1, "category": "boost"},
@@ -29,7 +24,6 @@ SHOP_POOL: list[dict] = [
     {"id": "xp_scroll", "name": "XP Scroll", "type": "xp_boost", "rarity": "uncommon", "xp_amount": 30, "price": 35, "description": "A compressed knowledge dump. +30 XP instantly.", "tier": 1, "category": "boost"},
 
     # === TIER 2 — Better consumables ===
-    {"id": "feast", "name": "All-You-Can-Eat Buffet", "type": "care", "rarity": "uncommon", "care_stat": "all", "care_amount": 30, "price": 40, "description": "Feed, rest, AND play. The full gastropod spa experience.", "tier": 2, "category": "care"},
     {"id": "sudo_potion", "name": "Sudo Potion", "type": "consumable", "rarity": "rare", "full_heal": True, "price": 50, "description": "With great power comes great restoration.", "tier": 2, "category": "consumable"},
     {"id": "code_review_scroll", "name": "Code Review Scroll", "type": "consumable", "rarity": "uncommon", "attack_buff": 5, "turns": 3, "price": 20, "description": "Reveals weaknesses in any codebase... or enemy.", "tier": 2, "category": "consumable"},
 
@@ -59,7 +53,7 @@ def generate_daily_shop(level: int, date: str | None = None) -> list[dict]:
     """Generate the daily shop rotation.
 
     Returns 6 items:
-    - 2 consumable/care items
+    - 2 consumable items
     - 2 boosters/equipment
     - 1 guaranteed rare+ slot
     - 1 wild card from any category
@@ -75,7 +69,7 @@ def generate_daily_shop(level: int, date: str | None = None) -> list[dict]:
     eligible = [item for item in SHOP_POOL if item["tier"] <= tier]
 
     # Split into pools
-    consumables = [i for i in eligible if i["category"] in ("care", "consumable")]
+    consumables = [i for i in eligible if i["category"] == "consumable"]
     boosters = [i for i in eligible if i["category"] in ("boost", "upgrade")]
     rares = [i for i in eligible if i["rarity"] in ("rare", "legendary")]
 

@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, Label
+from textual.widgets import Footer, Label, RichLog
 
-from ..constants import TYPE_COLORS, render_bar
+from ..constants import C, TYPE_COLORS, render_bar
 from ..dungeon.engine import CombatState
 from ..dungeon.items import ITEMS_BY_ID
 from ..dungeon.types import get_effectiveness, effectiveness_label
@@ -35,26 +35,29 @@ class BattleScreen(Screen):
         self._combat = combat
         self._awaiting_continue = False
         self._swap_selecting = False
-        self._swap_weapons: list[dict] = []  # weapons available to swap to
+        self._swap_weapons: list[dict] = []
         self._item_selecting = False
-        self._item_list: list[tuple[int, dict]] = []  # (inventory_index, item)
+        self._item_list: list[tuple[int, dict]] = []
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="battle-box"):
-            yield Label("  [bold #ef4444]╔══ BATTLE ══╗[/]", classes="header")
+        with Vertical(id="battle-box") as box:
+            box.border_title = " BATTLE "
 
-            # Enemy display
-            yield Label("", id="enemy-art", classes="mt1")
-            yield Label("", id="enemy-info")
+            with Vertical(id="enemy-panel") as ep:
+                ep.border_title = " Enemy "
+                yield Label("", id="enemy-art")
+                yield Label("", id="enemy-info")
 
-            # Player info
-            yield Label("", id="player-info", classes="mt1")
+            with Vertical(id="player-panel") as pp:
+                pp.border_title = " Jamb "
+                yield Label("", id="player-info")
 
-            # Battle log
-            yield Label("", id="battle-log", classes="mt1")
+            with Vertical(id="battle-log-panel") as lp:
+                lp.border_title = " Battle Log "
+                yield RichLog(id="battle-log", markup=True, max_lines=50)
 
-            # Actions
-            yield Label("", id="action-prompt", classes="mt1")
+            with Vertical(id="action-bar"):
+                yield Label("", id="action-prompt")
 
         yield Footer()
 
@@ -64,27 +67,25 @@ class BattleScreen(Screen):
     def _refresh(self) -> None:
         c = self._combat
 
-        # Enemy display
         art = c.enemy.get("art", "  ???")
-        self.query_one("#enemy-art", Label).update(f"[#ef4444]{art}[/]")
+        self.query_one("#enemy-art", Label).update(f"[{C.ERROR}]{art}[/]")
 
         enemy_hp_bar = render_bar(c.enemy_hp, c.enemy_max_hp)
         enemy_type = c.enemy.get("type", "???")
         type_color = TYPE_COLORS.get(enemy_type, "#888888")
         self.query_one("#enemy-info", Label).update(
-            f"  [bold #ef4444]{c.enemy['name']}[/]  "
+            f"  [bold {C.ERROR}]{c.enemy['name']}[/]  "
             f"[{type_color}][{enemy_type.upper()}][/]  "
-            f"[#ef4444]{enemy_hp_bar}[/] {c.enemy_hp}/{c.enemy_max_hp} HP  "
+            f"[{C.ERROR}]{enemy_hp_bar}[/] {c.enemy_hp}/{c.enemy_max_hp} HP  "
             f"ATK:{c.enemy_attack} DEF:{c.enemy_defense}"
         )
 
-        # Player info
         player_hp_bar = render_bar(c.player_hp, c.player_max_hp)
         buffs = ""
         if c.attack_buff > 0:
-            buffs += f" [#facc15]ATK+{c.attack_buff}({c.buff_turns}t)[/]"
+            buffs += f" [{C.WARNING}]ATK+{c.attack_buff}({c.buff_turns}t)[/]"
         if c.analyzed:
-            buffs += " [#a78bfa]ANALYZED(2x)[/]"
+            buffs += f" [{C.PRIMARY}]ANALYZED(2x)[/]"
 
         weapon_info = ""
         if c.weapon_type:
@@ -96,25 +97,19 @@ class BattleScreen(Screen):
             weapon_info = f"  [{wt_color}]{weapon_name}[{c.weapon_type.upper()}][/]"
 
         self.query_one("#player-info", Label).update(
-            f"  [bold #22c55e]Jamb[/]  "
-            f"[#22c55e]{player_hp_bar}[/] {c.player_hp}/{c.player_max_hp} HP  "
+            f"  [bold {C.SUCCESS}]Jamb[/]  "
+            f"[{C.SUCCESS}]{player_hp_bar}[/] {c.player_hp}/{c.player_max_hp} HP  "
             f"ATK:{c.player_attack + c.attack_buff} DEF:{c.player_defense} SPD:{c.player_speed}{buffs}{weapon_info}"
         )
 
-        # Battle log (last 3 entries)
-        log_lines = c.log[-3:] if c.log else ["Battle begins!"]
-        log_text = "\n".join(f"  [dim]> {line}[/]" for line in log_lines)
-        self.query_one("#battle-log", Label).update(log_text)
-
-        # Action prompt
         if self._awaiting_continue:
             if c.victory:
                 self.query_one("#action-prompt", Label).update(
-                    "  [#22c55e bold]VICTORY![/] Press any key to continue."
+                    f"  [{C.SUCCESS} bold]VICTORY![/] Press any key to continue."
                 )
             else:
                 self.query_one("#action-prompt", Label).update(
-                    "  [#ef4444 bold]DEFEATED![/] Press any key to continue."
+                    f"  [{C.ERROR} bold]DEFEATED![/] Press any key to continue."
                 )
         elif self._item_selecting:
             lines = ["  [bold]Use item:[/] (ESC to cancel)"]
@@ -133,8 +128,8 @@ class BattleScreen(Screen):
                 elif item.get("revive"):
                     effect = "REVIVE"
                 lines.append(
-                    f"  [bold yellow]{i + 1}[/] {item['name']}{count_text} "
-                    f"[dim]({effect})[/]"
+                    f"  [bold {C.ACCENT}]{i + 1}[/] {item['name']}{count_text} "
+                    f"[{C.MUTED}]({effect})[/]"
                 )
             self.query_one("#action-prompt", Label).update("\n".join(lines))
         elif self._swap_selecting:
@@ -143,7 +138,7 @@ class BattleScreen(Screen):
                 dt = w.get("damage_type", "???")
                 color = TYPE_COLORS.get(dt, "#888888")
                 lines.append(
-                    f"  [bold yellow]{i + 1}[/] {w['name']} "
+                    f"  [bold {C.ACCENT}]{i + 1}[/] {w['name']} "
                     f"(ATK:{w.get('attack', 0)}) [{color}][{dt.upper()}][/]"
                 )
             self.query_one("#action-prompt", Label).update("\n".join(lines))
@@ -156,26 +151,30 @@ class BattleScreen(Screen):
             }
             special_name = special_names.get(highest, "Special")
             self.query_one("#action-prompt", Label).update(
-                f"  [bold yellow]A[/]ttack  [bold yellow]D[/]efend  "
-                f"[bold yellow]S[/]pecial({special_name})  [bold yellow]I[/]tem  "
-                f"[bold yellow]W[/]eapon  [bold yellow]F[/]lee"
+                f"  [bold {C.ACCENT}]A[/]ttack  [bold {C.ACCENT}]D[/]efend  "
+                f"[bold {C.ACCENT}]S[/]pecial({special_name})  [bold {C.ACCENT}]I[/]tem  "
+                f"[bold {C.ACCENT}]W[/]eapon  [bold {C.ACCENT}]F[/]lee"
             )
+
+    def _write_log(self, entries: list[str]) -> None:
+        log = self.query_one("#battle-log", RichLog)
+        for entry in entries:
+            log.write(f"  > {entry}")
 
     def _do_enemy_turn(self) -> None:
         c = self._combat
         if c.finished:
             return
-
-        # Enemy special first
+        log_before = len(c.log)
         c.apply_enemy_special()
         if not c.finished:
             c.enemy_turn()
-
         c.end_of_turn()
-
+        new_entries = c.log[log_before:]
+        if new_entries:
+            self._write_log(new_entries)
         if c.finished:
             self._awaiting_continue = True
-
         self._refresh()
 
     def _end_battle(self) -> None:
@@ -202,8 +201,12 @@ class BattleScreen(Screen):
                 if 0 <= idx < len(self._item_list):
                     inv_idx, item = self._item_list[idx]
                     app: JambApp = self.app  # type: ignore[assignment]
+                    log_before = len(self._combat.log)
                     self._combat.player_use_item(item)
                     app.state.inventory_remove(inv_idx, 1)
+                    new_entries = self._combat.log[log_before:]
+                    if new_entries:
+                        self._write_log(new_entries)
                     self._item_selecting = False
                     self._do_enemy_turn()
             return
@@ -213,16 +216,13 @@ class BattleScreen(Screen):
                 self._swap_selecting = False
                 self._refresh()
                 return
-            # Number keys to pick a weapon
             if event.character and event.character.isdigit():
                 idx = int(event.character) - 1
                 if 0 <= idx < len(self._swap_weapons):
                     weapon = self._swap_weapons[idx]
                     app: JambApp = self.app  # type: ignore[assignment]
-                    # Swap in game state: put old weapon back, equip new one
                     old_weapon_id = app.state.equipment.get("weapon")
                     app.state.equipment["weapon"] = weapon["id"]
-                    # Move old weapon back to inventory, remove new from inventory
                     for i, item in enumerate(app.state.inventory):
                         if item.get("id") == weapon["id"]:
                             app.state.inventory.pop(i)
@@ -231,8 +231,8 @@ class BattleScreen(Screen):
                         old_weapon = ITEMS_BY_ID.get(old_weapon_id)
                         if old_weapon:
                             app.state.inventory_add(dict(old_weapon))
-                    # Update combat state
                     self._combat.swap_weapon(weapon["id"])
+                    self._write_log([f"Swapped to {weapon['name']}!"])
                     self._swap_selecting = False
                     self._do_enemy_turn()
             return
@@ -241,7 +241,11 @@ class BattleScreen(Screen):
         if self._awaiting_continue or self._item_selecting:
             return
         c = self._combat
+        log_before = len(c.log)
         c.player_turn_attack()
+        new_entries = c.log[log_before:]
+        if new_entries:
+            self._write_log(new_entries)
         if not c.finished:
             self._do_enemy_turn()
         else:
@@ -252,7 +256,11 @@ class BattleScreen(Screen):
         if self._awaiting_continue or self._item_selecting:
             return
         c = self._combat
+        log_before = len(c.log)
         c.player_turn_defend()
+        new_entries = c.log[log_before:]
+        if new_entries:
+            self._write_log(new_entries)
         self._do_enemy_turn()
 
     def action_special(self) -> None:
@@ -261,7 +269,11 @@ class BattleScreen(Screen):
         app: JambApp = self.app  # type: ignore[assignment]
         c = self._combat
         highest = app.state.stats.highest()
+        log_before = len(c.log)
         c.player_turn_special(highest)
+        new_entries = c.log[log_before:]
+        if new_entries:
+            self._write_log(new_entries)
         if not c.finished:
             self._do_enemy_turn()
         else:
@@ -277,10 +289,9 @@ class BattleScreen(Screen):
             if item.get("type") == "consumable"
         ]
         if not consumables:
-            self._combat.log.append("No consumables in inventory!")
-            self._refresh()
+            self._write_log(["No consumables in inventory!"])
             return
-        self._item_list = consumables[:9]  # max 9 shown
+        self._item_list = consumables[:9]
         self._item_selecting = True
         self._refresh()
 
@@ -288,16 +299,14 @@ class BattleScreen(Screen):
         if self._awaiting_continue or self._swap_selecting or self._item_selecting:
             return
         app: JambApp = self.app  # type: ignore[assignment]
-        # Find weapons in inventory (not currently equipped)
         weapons = [
             item for item in app.state.inventory
             if item.get("type") == "weapon"
         ]
         if not weapons:
-            self._combat.log.append("No other weapons in inventory!")
-            self._refresh()
+            self._write_log(["No other weapons in inventory!"])
             return
-        self._swap_weapons = weapons[:9]  # max 9 shown
+        self._swap_weapons = weapons[:9]
         self._swap_selecting = True
         self._refresh()
 
@@ -306,13 +315,12 @@ class BattleScreen(Screen):
             return
         import random
         c = self._combat
-        # Speed check
         flee_chance = 40 + c.player_speed * 2
         if random.randint(1, 100) <= flee_chance:
-            c.log.append("Jamb fled successfully!")
+            self._write_log(["Jamb fled successfully!"])
             c.finished = True
             self._awaiting_continue = True
             self._refresh()
         else:
-            c.log.append("Failed to flee!")
+            self._write_log(["Failed to flee!"])
             self._do_enemy_turn()

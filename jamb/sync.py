@@ -31,6 +31,10 @@ def sync_bones_to_tui(state: JambState) -> bool:
     state.native_rarity = bones["rarity"]
     state.native_stats = bones["stats"]
     state.rarity = bones["rarity_display"]
+    state.species = bones["species"].title()  # "duck" -> "Duck"
+    state.eyes = bones["eyes"]
+    state.hat = bones["hat"]
+    state.shiny = bones["shiny"]
 
     if not state.bones_synced:
         # First sync: seed TUI stats from native base stats
@@ -100,29 +104,15 @@ def _build_enriched_personality(state: JambState, companion: dict) -> str:
     weapon = state.equipment.get("weapon", "none")
     armor = state.equipment.get("armor", "none")
 
-    # Notable achievements
-    notable = []
-    if "chaos_lord" in state.achievements:
-        notable.append("Chaos Lord")
-    if "zen_master" in state.achievements:
-        notable.append("Zen Master")
-    if "bug_bounty" in state.achievements:
-        notable.append("Bug Bounty Hunter")
-    if "legend" in state.achievements:
-        notable.append("Legend")
-    ach_str = ", ".join(notable) if notable else "none yet"
-
     progression = (
         f"{marker}\n"
         f"Level {state.level} {state.title} ({state.rarity}). "
         f"Dominant stat: {highest.upper()} ({highest_val}/255). "
-        f"Mood: {state.mood_label()}. "
         f"Stats: "
         + ", ".join(f"{k.upper()}:{v}" for k, v in stats.items())
         + f". "
         f"Dungeon floor record: {state.dungeon_highest_floor}. "
         f"Equipment: {weapon}/{armor}. "
-        f"Achievements: {ach_str}. "
         f"Gold: {state.gold}."
     )
 

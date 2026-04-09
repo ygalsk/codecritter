@@ -1,27 +1,14 @@
 # Jamb
 
-A TUI Tamagotchi training ground for your terminal snail companion, built for [Claude Code](https://claude.com/claude-code).
+A TUI dungeon crawler and companion system for [Claude Code](https://claude.com/claude-code). Your companion gains stats and XP automatically as you code — then take them dungeon crawling.
 
 ```
     \^^^/
-  ◉    .--.
+  °    .--.
    \  ( @ )
     \_`--'
    ~~~~~~~
 ```
-
-Jamb lives in your terminal. Train him, feed him, explore dungeons together, and watch him grow as you code. He gains stats passively through Claude Code hooks — every `Edit`, `Bash`, and `Grep` you run rewards him automatically.
-
-## Features
-
-- **Training Activities** — Five mini-games targeting each stat: Bug Hunt (debugging), Meditation (patience), Chaos Roulette (chaos), Riddle Challenge (wisdom), Comeback Battle (snark)
-- **Dungeon Crawling** — Procedural roguelike floors with turn-based combat, a 5-way type effectiveness wheel, loot drops, and 12+ enemy types (Null Pointer, Race Condition, Deadlock...)
-- **Progression** — Level up, evolve through stages (hatchling → juvenile → adult), unlock achievements, earn titles
-- **Care System** — Hunger, energy, and happiness decay over time — keep Jamb happy for mood bonuses
-- **Shop** — Daily rotating inventory of weapons, armor, consumables, and stat boosters
-- **Chat** — Talk to Jamb via LLM-powered personality (Anthropic, OpenAI, Ollama, or local models)
-- **Claude Code Hooks** — Automatic stat/XP rewards when you use development tools
-- **Native Buddy Sync** — Bidirectional sync with Claude Code's native companion system
 
 ## Install
 
@@ -29,54 +16,32 @@ Jamb lives in your terminal. Train him, feed him, explore dungeons together, and
 pip install jamb
 ```
 
-Optional extras:
+For MCP server support:
 
 ```bash
-pip install "jamb[chat]"    # Anthropic Claude chat
-pip install "jamb[local]"   # OpenAI-compatible / Ollama chat
-pip install "jamb[mcp]"     # MCP server for Claude Code
-pip install "jamb[all]"     # Everything
+pip install "jamb[mcp]"
 ```
 
 Requires Python 3.12+.
 
-## Usage
+## Quick Start
 
 ```bash
 # Launch the TUI
 jamb
 
-# CLI commands
-jamb status              # Show stats, level, mood, care
-jamb status --json       # Full state dump
-jamb reward -s debugging -a 3 -x 10   # Manual stat reward
-jamb config --show       # Show chat provider config
-jamb config -p ollama -m llama3.2      # Switch chat provider
-jamb sync                # Sync with native Claude Code buddy
-jamb autocare            # Auto-feed if care stats are low
+# Check companion status
+jamb status
+
+# Run the MCP server for Claude Code
+jamb mcp
 ```
 
-## TUI Keybindings
+## How It Works
 
-| Key | Action |
-|-----|--------|
-| `t` | Train |
-| `d` | Dungeon |
-| `c` | Chat |
-| `f` | Feed |
-| `r` | Rest |
-| `p` | Play |
-| `s` | Status |
-| `i` | Inventory |
-| `a` | Achievements |
-| `$` | Shop |
-| `q` | Quit |
+Jamb hooks into Claude Code sessions. Every tool you use — `Bash`, `Edit`, `Grep`, `Write`, etc. — rewards your companion with stat points and XP. Your companion levels up, evolves, and gets stronger while you work.
 
-## Claude Code Integration
-
-### Hooks
-
-Jamb ships with hooks that automatically reward stats when you use Claude Code tools:
+### Hook Rewards
 
 | Tool | Stat | XP |
 |------|------|----|
@@ -88,26 +53,46 @@ Jamb ships with hooks that automatically reward stats when you use Claude Code t
 | Glob | +1 snark | +1 |
 | Read | +1 wisdom | +1 |
 
-Session start runs `autocare` (+5 XP), session end syncs progression to the native buddy.
+Session start grants +5 XP. Session end rewards +2 patience and syncs progression.
 
-### MCP Server
+## TUI
 
-```bash
-jamb mcp
+The terminal interface lets you view your companion, explore dungeons, manage inventory, and buy items.
+
+### Keybindings
+
+| Key | Action |
+|-----|--------|
+| `d` | Enter dungeon |
+| `i` | Inventory |
+| `s` | Shop |
+| `q` | Quit |
+
+## Dungeon
+
+Procedurally generated floors with turn-based combat. Rooms contain enemies, treasure, traps, and bosses. Enemies are programming-themed — Null Pointer, Race Condition, Deadlock, Memory Leak, Infinite Loop, and more.
+
+### Combat Type Wheel
+
+A 5-way effectiveness system (1.5x strong, 0.5x weak):
+
+```
+debugging -> chaos -> patience -> snark -> wisdom -> debugging
 ```
 
-Exposes tools for checking status, feeding, playing, resting, rewarding, and chatting with Jamb from within Claude Code.
+Equipment (weapons, armor, accessories) and consumables add strategic depth.
 
-### Skills
+## Species
 
-- `/jamb:sync` — Bidirectional sync between native buddy and TUI progression
-- `/jamb:card` — Display Jamb's full companion card
+18 companion species, deterministically assigned from your Claude Code account:
 
-## Game Systems
+duck, goose, blob, cat, dragon, octopus, owl, penguin, turtle, snail, ghost, axolotl, capybara, cactus, robot, rabbit, mushroom, chonk
 
-### Stats
+Each has unique ASCII art across three evolution stages (hatchling, juvenile, adult) with species-specific reactions and personality.
 
-Five stats (0–255 scale), each trained by a different activity and rewarded by different tools:
+## Stats & Progression
+
+Five stats on a 0-255 scale:
 
 - **DEBUGGING** — Bug identification and fixing
 - **PATIENCE** — Careful, methodical work
@@ -115,19 +100,9 @@ Five stats (0–255 scale), each trained by a different activity and rewarded by
 - **WISDOM** — Knowledge gathering and teaching
 - **SNARK** — Pattern matching and witty responses
 
-### Combat
+### Rarity
 
-The dungeon uses a 5-way type effectiveness wheel:
-
-```
-debugging → chaos → patience → snark → wisdom → debugging
-```
-
-Equipment (weapons, armor, accessories) and consumable items add strategic depth.
-
-### Rarity & Progression
-
-Rarity is determined by Claude Code's native buddy system and sets progression caps:
+Rarity is determined by your account and sets progression caps:
 
 | Rarity | Level Cap | Stat Cap |
 |--------|-----------|----------|
@@ -137,11 +112,61 @@ Rarity is determined by Claude Code's native buddy system and sets progression c
 | Epic | 75 | 245 |
 | Legendary | 100 | 255 |
 
+### Evolution
+
+Companions evolve through three stages as they level up:
+
+- **Hatchling** (Level 1)
+- **Juvenile** (Level 10)
+- **Adult** (Level 20+)
+
+## Shop
+
+A daily rotating inventory of weapons, armor, consumables, and stat boosters. Higher-tier items unlock as your companion levels up.
+
+## Claude Code Integration
+
+### MCP Server
+
+```bash
+jamb mcp
+```
+
+Exposes tools for checking status, rewarding stats, triggering reactions, petting, and muting/unmuting your companion — all usable from within Claude Code.
+
+### Statusline Speech Bubble
+
+Jamb integrates with the Claude Code statusline. A Stop hook extracts `<!-- buddy: ... -->` comments from assistant responses and displays them as speech bubbles. Reactions fire automatically on errors, test failures, large diffs, and other events.
+
+### Buddy Skill
+
+The `/buddy` skill routes commands to MCP tools:
+
+- `/buddy show` — Display companion card
+- `/buddy pet` — Pet your companion
+- `/buddy stats` — View full status
+- `/buddy sync` — Sync with native buddy
+- `/buddy mute` / `unmute` — Toggle reactions
+- `/buddy rename NAME` — Rename companion
+
+## CLI Reference
+
+```bash
+jamb                    # Launch TUI
+jamb status             # Show stats, level, mood
+jamb status --json      # Full state as JSON
+jamb reward -s STAT -a AMOUNT -x XP   # Manual stat reward
+jamb sync               # Sync with native Claude Code buddy
+jamb react -r REASON    # Trigger a reaction
+jamb buddy-comment -t TEXT  # Set speech bubble text
+jamb mute / unmute      # Toggle reactions
+jamb pet                # Pet your companion
+jamb mcp                # Run MCP server
+```
+
 ## Dependencies
 
 - [Textual](https://github.com/Textualize/textual) — TUI framework
-- [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-python) *(optional)* — Chat via Claude
-- [OpenAI SDK](https://github.com/openai/openai-python) *(optional)* — Chat via OpenAI/Ollama
 - [MCP](https://modelcontextprotocol.io/) *(optional)* — Model Context Protocol server
 
 ## License

@@ -253,44 +253,55 @@ class Floor:
         return room
 
     def render_map(self) -> str:
-        """Render the floor as ASCII art."""
+        """Render the floor as ASCII art with large readable cells."""
         lines = []
+        cw = 7  # cell inner width (chars between borders)
+        sep = "─" * cw
+
         # Top border
-        lines.append("  " + "┌" + "───┬" * (self.width - 1) + "───┐")
+        lines.append("┌" + (sep + "┬") * (self.width - 1) + sep + "┐")
 
         for y in range(self.height):
-            row = "  │"
+            # Content row
+            row = "│"
             for x in range(self.width):
                 room = self.rooms[y][x]
+                pad = cw - 1  # chars around the symbol
+                left = pad // 2
+                right = pad - left
+                sp_l = " " * left
+                sp_r = " " * right
                 if x == self.player_x and y == self.player_y:
-                    cell = "[bold #22c55e] @ [/]"
+                    cell = f"{sp_l}[bold #9ECE6A]@[/]{sp_r}"
                 elif not room.explored:
-                    cell = "[dim] ░ [/]"
+                    cell = f"{sp_l}[dim]░[/]{sp_r}"
                 elif room.room_type == WALL:
-                    cell = "[dim] # [/]"
+                    cell = f"{sp_l}[dim]#[/]{sp_r}"
                 elif room.cleared or room.room_type in (EMPTY, ENTRANCE):
-                    cell = "[dim] . [/]"
+                    cell = f"{sp_l}[dim]·[/]{sp_r}"
                 elif room.room_type == ENEMY:
-                    cell = "[bold #ef4444] ! [/]"
+                    cell = f"{sp_l}[bold #F7768E]![/]{sp_r}"
                 elif room.room_type == BOSS:
-                    cell = "[bold #ef4444] B [/]"
+                    cell = f"{sp_l}[bold #F7768E]B[/]{sp_r}"
                 elif room.room_type == TREASURE:
-                    cell = "[bold #facc15] ? [/]"
+                    cell = f"{sp_l}[bold #E0AF68]?[/]{sp_r}"
                 elif room.room_type == REST:
-                    cell = "[bold #06b6d4] + [/]"
+                    cell = f"{sp_l}[bold #7AA2F7]+[/]{sp_r}"
                 elif room.room_type == TRAP:
-                    cell = "[bold #a78bfa] ^ [/]"
+                    cell = f"{sp_l}[bold #BB9AF7]^[/]{sp_r}"
                 elif room.room_type == STAIRS:
-                    cell = "[bold #d946ef] > [/]"
+                    cell = f"{sp_l}[bold #BB9AF7]>[/]{sp_r}"
                 else:
-                    cell = "   "
+                    cell = " " * cw
                 row += cell + "│"
             lines.append(row)
 
+            # Row separator
             if y < self.height - 1:
-                lines.append("  " + "├" + "───┼" * (self.width - 1) + "───┤")
+                lines.append("├" + (sep + "┼") * (self.width - 1) + sep + "┤")
 
-        lines.append("  " + "└" + "───┴" * (self.width - 1) + "───┘")
+        # Bottom border
+        lines.append("└" + (sep + "┴") * (self.width - 1) + sep + "┘")
         return "\n".join(lines)
 
     def as_dict(self) -> dict:

@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Label
 
-from ..dungeon.engine import DungeonRun
+from ..constants import C
 from ..dungeon.generator import BOSS, EMPTY, ENEMY, ENTRANCE, REST, STAIRS, TRAP, TREASURE
+from ..widgets.dungeon_map import DungeonMap
 
 if TYPE_CHECKING:
     from ..app import JambApp
@@ -33,12 +34,31 @@ class DungeonScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
-        with Vertical(classes="screen-box"):
-            yield Label("  [bold #d946ef]╔══ CODE DUNGEON ══╗[/]", classes="header")
-            yield Label("", id="floor-info")
-            yield Label("", id="dungeon-map", classes="mt1")
-            yield Label("", id="room-desc", classes="mt1")
-            yield Label("", id="dungeon-stats", classes="mt1")
+        app: JambApp = self.app  # type: ignore[assignment]
+        run = app.dungeon_run
+        w = run.floor.width if run else 5
+        h = run.floor.height if run else 5
+
+        with Vertical(id="dungeon-box") as box:
+            box.border_title = " CODE DUNGEON "
+
+            # Status bar
+            with Horizontal(id="dungeon-status-row"):
+                yield Label("", id="floor-info")
+                yield Label("", id="hp-info")
+                yield Label("", id="gold-info")
+                yield Label("", id="xp-info")
+
+            # Grid map — fills available space
+            yield DungeonMap(width=w, height=h, id="dungeon-grid")
+
+            # Room description
+            with Vertical(id="room-panel") as rp:
+                rp.border_title = " Room "
+                yield Label("", id="room-desc")
+
+            # Legend
+            yield Label("", id="dungeon-legend")
 
         yield Footer()
 
@@ -53,27 +73,34 @@ class DungeonScreen(Screen):
 
         floor = run.floor
 
-        # Floor info
+        # Status bar
         self.query_one("#floor-info", Label).update(
-            f"  [bold]Floor {floor.number}[/]  │  "
-            f"[#ef4444]HP: {run.hp}/{run.max_hp}[/]  │  "
-            f"[#facc15]Gold: {run.gold_earned}[/]  │  "
-            f"[#a78bfa]XP: {run.xp_earned}[/]"
+            f"  [bold]Floor {floor.number}[/]"
+        )
+        self.query_one("#hp-info", Label).update(
+            f"[{C.ERROR}]HP: {run.hp}/{run.max_hp}[/]"
+        )
+        self.query_one("#gold-info", Label).update(
+            f"[{C.WARNING}]Gold: {run.gold_earned}[/]"
+        )
+        self.query_one("#xp-info", Label).update(
+            f"[{C.PRIMARY}]XP: {run.xp_earned}[/]"
         )
 
-        # Map
-        self.query_one("#dungeon-map", Label).update(floor.render_map())
+        # Update grid map
+        grid = self.query_one("#dungeon-grid", DungeonMap)
+        grid.update_from_floor(floor)
 
         # Room description
         room = floor.current_room()
         desc = room.description or "An empty room."
         room_type_label = {
-            ENEMY: "[#ef4444 bold]ENEMY[/]",
-            BOSS: "[#ef4444 bold]BOSS[/]",
-            TREASURE: "[#facc15 bold]TREASURE[/]",
-            REST: "[#06b6d4 bold]REST POINT[/]",
-            TRAP: "[#a78bfa bold]TRAP[/]",
-            STAIRS: "[#d946ef bold]STAIRS DOWN[/]",
+            ENEMY: f"[{C.ERROR} bold]ENEMY[/]",
+            BOSS: f"[{C.ERROR} bold]BOSS[/]",
+            TREASURE: f"[{C.WARNING} bold]TREASURE[/]",
+            REST: f"[{C.SECONDARY} bold]REST POINT[/]",
+            TRAP: f"[{C.PRIMARY} bold]TRAP[/]",
+            STAIRS: f"[{C.PRIMARY} bold]STAIRS DOWN[/]",
         }.get(room.room_type if not room.cleared else EMPTY, "")
 
         self.query_one("#room-desc", Label).update(
@@ -81,14 +108,13 @@ class DungeonScreen(Screen):
         )
 
         # Legend
-        self.query_one("#dungeon-stats", Label).update(
-            "  [#22c55e]@[/]=You  [#ef4444]![/]=Enemy  [#ef4444]B[/]=Boss  "
-            "[#facc15]?[/]=Loot  [#06b6d4]+[/]=Rest  [#a78bfa]^[/]=Trap  "
-            "[#d946ef]>[/]=Stairs  [dim]░[/]=Unknown"
+        self.query_one("#dungeon-legend", Label).update(
+            f"  [{C.SUCCESS}]@[/]=You  [{C.ERROR}]![/]=Enemy  [{C.ERROR}]B[/]=Boss  "
+            f"[{C.WARNING}]?[/]=Loot  [{C.SECONDARY}]+[/]=Rest  [{C.PRIMARY}]^[/]=Trap  "
+            f"[{C.PRIMARY}]>[/]=Stairs  [{C.MUTED}]░[/]=Unknown"
         )
 
     def _handle_room(self) -> None:
-        """Handle entering a new room."""
         app: JambApp = self.app  # type: ignore[assignment]
         run = app.dungeon_run
         if not run:

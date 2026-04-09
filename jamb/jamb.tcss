@@ -3,111 +3,90 @@ Screen {
     background: $surface;
 }
 
-/* ── Shared screen box ─────────────────────────────────────────── */
-.screen-box {
-    border: round $primary-lighten-2;
-    border-title-color: $secondary;
-    height: 1fr;
+/* ── Scrollbar theming ─────────────────────────────────────────── */
+* {
+    scrollbar-color: $panel;
+    scrollbar-color-hover: $primary;
+    scrollbar-color-active: $accent;
+    scrollbar-background: $surface;
 }
 
-/* ── Main container ────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   MAIN SCREEN
+   ══════════════════════════════════════════════════════════════════ */
+
 #main-box {
-    border: round $accent;
-    border-title-color: yellow;
+    border: heavy $primary;
+    border-title-color: $accent;
+    border-title-style: bold;
+    border-title-align: center;
     height: 1fr;
+    padding: 1 3;
 }
-
-/* ── Text styles ───────────────────────────────────────────────── */
-.title { color: yellow; text-style: bold; }
-.rarity { color: $secondary; text-style: bold; }
-.level { color: white; text-style: bold; }
-.stat-label { color: white; text-style: bold; }
-.header { color: $secondary; text-style: bold; }
-.speech { color: lightskyblue; }
-.hotkey { color: yellow; text-style: bold; }
-.success { color: lightgreen; text-style: bold; }
-.warning { color: yellow; text-style: bold; }
-.error { color: tomato; text-style: bold; }
-.dim { color: $text-muted; }
-
-/* ── Mood colors ───────────────────────────────────────────────── */
-.mood-good { color: lightgreen; }
-.mood-neutral { color: yellow; }
-.mood-bad { color: tomato; }
-
-/* ── Rarity colors (RPG standard) ──────────────────────────────── */
-.rarity-common { color: #9d9d9d; }
-.rarity-uncommon { color: #1eff00; }
-.rarity-rare { color: #0070dd; }
-.rarity-epic { color: #a335ee; }
-.rarity-legendary { color: #ff8000; }
-
-/* ── Stat bar colors ───────────────────────────────────────────── */
-ProgressBar.bar-debugging .bar--bar { color: #22c55e; }
-ProgressBar.bar-patience .bar--bar { color: #06b6d4; }
-ProgressBar.bar-chaos .bar--bar { color: #ef4444; }
-ProgressBar.bar-wisdom .bar--bar { color: #a78bfa; }
-ProgressBar.bar-snark .bar--bar { color: #facc15; }
-ProgressBar.xp-bar .bar--bar { color: $secondary; }
-
-/* ── Menu items ────────────────────────────────────────────────── */
-.menu-item {
-    background: transparent;
-    color: white;
-}
-.menu-item:focus {
-    background: $accent;
-    color: white;
-    text-style: bold;
-}
-
-/* ── Bordered panels ───────────────────────────────────────────── */
-.bordered {
-    border: round $primary-lighten-2;
-}
-
-/* ── Spacing helpers ───────────────────────────────────────────── */
-.mt1 { margin-top: 1; }
-.mb1 { margin-bottom: 1; }
-.section { margin-top: 1; }
 
 /* ── Header row ────────────────────────────────────────────────── */
 #header-row {
     height: 1;
     layout: horizontal;
+    margin-bottom: 1;
 }
-#header-rarity { width: 1fr; }
-#header-stage { width: auto; }
-#header-level { width: 1fr; text-align: right; }
+#header-rarity { width: auto; margin-right: 2; }
+#header-stage  { width: 1fr; text-align: center; }
+#header-gold   { width: auto; margin: 0 2; }
+#header-level  { width: auto; }
 
 /* ── Art + speech side-by-side ──────────────────────────────────── */
 #art-speech {
     height: auto;
-    min-height: 7;
-    max-height: 10;
+    max-height: 9;
+    margin-bottom: 1;
 }
-#snail-art {
+#snail-art, #companion-art {
     width: 22;
+    height: auto;
     content-align: center middle;
 }
 #speech-bubble {
-    height: 100%;
-    border: round lightskyblue;
-    border-title-color: #facc15;
+    height: auto;
+    min-height: 3;
+    max-height: 7;
+    border: round $secondary;
+    border-title-color: $warning;
     border-title-style: bold;
+    border-title-align: left;
+    padding: 0 1;
 }
-#speech-bubble.mood-good    { border: round #22c55e; }
-#speech-bubble.mood-neutral { border: round #facc15; }
-#speech-bubble.mood-bad     { border: round #ef4444; }
+#speech-bubble.mood-good    { border: round $success; }
+#speech-bubble.mood-neutral { border: round $warning; }
+#speech-bubble.mood-bad     { border: round $error; }
 
-/* ── Stat bar layout ───────────────────────────────────────────── */
+/* ── XP bar area ───────────────────────────────────────────────── */
+#xp-section {
+    height: auto;
+    margin-bottom: 1;
+}
+
+/* ── Stat bars panel ───────────────────────────────────────────── */
+#stats-panel {
+    border: round $panel;
+    border-title-color: $primary;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 2;
+    height: auto;
+}
+
 .stat-bar-row {
     height: 1;
     layout: horizontal;
+    margin-bottom: 1;
+}
+.stat-bar-row:last-child {
+    margin-bottom: 0;
 }
 .stat-bar-row .stat-bar-label {
-    width: 12;
-    color: white;
+    width: 14;
+    color: $foreground;
     text-style: bold;
 }
 .stat-bar-row ProgressBar {
@@ -115,71 +94,274 @@ ProgressBar.xp-bar .bar--bar { color: $secondary; }
 }
 .stat-bar-row .stat-bar-value {
     width: auto;
-    min-width: 12;
-    color: white;
+    min-width: 10;
+    color: $foreground;
     text-style: bold;
+    text-align: right;
 }
 
-/* ── Care overlay ──────────────────────────────────────────────── */
-.care-overlay {
-    align: center middle;
-    border: round $primary-lighten-2;
-}
+/* ── Stat bar colors ───────────────────────────────────────────── */
+ProgressBar.bar-debugging .bar--bar { color: #9ECE6A; }
+ProgressBar.bar-patience  .bar--bar { color: #7AA2F7; }
+ProgressBar.bar-chaos     .bar--bar { color: #F7768E; }
+ProgressBar.bar-wisdom    .bar--bar { color: #BB9AF7; }
+ProgressBar.bar-snark     .bar--bar { color: #E0AF68; }
+ProgressBar.xp-bar        .bar--bar { color: $primary; }
 
-/* ── Evolution screen ──────────────────────────────────────────── */
-.evolution-container {
-    align: center middle;
-    border: round $primary-lighten-2;
-    border-title-color: tomato;
-}
+/* ══════════════════════════════════════════════════════════════════
+   DUNGEON SCREEN
+   ══════════════════════════════════════════════════════════════════ */
 
-/* ── Activity screens ──────────────────────────────────────────── */
-.activity-box {
-    border: round $primary-lighten-2;
-    border-title-color: $secondary;
+#dungeon-box {
+    border: heavy $primary;
+    border-title-color: $primary;
+    border-title-style: bold;
+    border-title-align: center;
     height: 1fr;
+    padding: 1 3;
 }
 
-/* ── Battle screen (unique red border) ──────────────────────────── */
-#battle-box {
-    border: round #ef4444;
-    border-title-color: #ef4444;
-    height: 1fr;
-}
-
-/* ── Shop screen (unique gold border) ───────────────────────────── */
-#shop-box {
-    border: round #facc15;
-    border-title-color: #facc15;
-    height: 1fr;
-}
-
-/* ── Chat screen ──────────────────────────────────────────────── */
-#chat-history {
-    height: 1fr;
-    min-height: 5;
-}
-#typing-indicator {
+#dungeon-status-row {
     height: 1;
-    color: $text-muted;
+    layout: horizontal;
+    margin-bottom: 1;
 }
-#chat-input {
-    dock: bottom;
-    margin: 0 1;
-}
-ChatMessage {
-    height: auto;
-    margin: 0 0 1 0;
+#dungeon-status-row Label {
+    width: 1fr;
+    text-align: center;
 }
 
-/* ── Name divider ──────────────────────────────────────────────── */
-.name-divider {
-    color: yellow;
-    text-style: bold;
+/* Map grid fills remaining space */
+#dungeon-grid {
+    height: 1fr;
+    width: 1fr;
+    margin-bottom: 1;
+}
+
+#room-panel {
+    border: round $accent;
+    border-title-color: $accent;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 3;
+    height: auto;
+    min-height: 3;
     margin-top: 1;
 }
 
-/* ── Care stat row ─────────────────────────────────────────────── */
-.care-row {
-    height: 1;
+#dungeon-legend {
+    height: auto;
+    color: $text-muted;
+    text-align: center;
+    margin-top: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BATTLE SCREEN
+   ══════════════════════════════════════════════════════════════════ */
+
+#battle-box {
+    border: heavy $error;
+    border-title-color: $error;
+    border-title-style: bold;
+    border-title-align: center;
+    height: 1fr;
+    padding: 1 3;
+}
+
+#enemy-panel {
+    border: round $error;
+    border-title-color: $error;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 2;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#player-panel {
+    border: round $success;
+    border-title-color: $success;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 2;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#battle-log-panel {
+    border: round $panel;
+    border-title-color: $secondary;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 0 2;
+    height: 1fr;
+    min-height: 5;
+    margin-bottom: 1;
+}
+
+#battle-log-panel RichLog {
+    height: 1fr;
+    scrollbar-size: 1 1;
+}
+
+#action-bar {
+    height: auto;
+    border: heavy $panel;
+    padding: 1 2;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   INVENTORY SCREEN
+   ══════════════════════════════════════════════════════════════════ */
+
+#inv-box {
+    border: heavy $primary;
+    border-title-color: $primary;
+    border-title-style: bold;
+    border-title-align: center;
+    height: 1fr;
+    padding: 1 3;
+}
+
+#inv-header {
+    height: auto;
+    margin-bottom: 1;
+}
+
+#equip-panel {
+    border: round $primary;
+    border-title-color: $primary;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 2;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#backpack-panel {
+    border: round $secondary;
+    border-title-color: $secondary;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 2;
+    height: auto;
+}
+
+#detail-panel {
+    border: round $accent;
+    border-title-color: $accent;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 2;
+    height: auto;
+    margin-top: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SHOP SCREEN
+   ══════════════════════════════════════════════════════════════════ */
+
+#shop-box {
+    border: heavy $warning;
+    border-title-color: $warning;
+    border-title-style: bold;
+    border-title-align: center;
+    height: 1fr;
+    padding: 1 3;
+}
+
+#shop-header {
+    height: auto;
+    margin-bottom: 1;
+}
+
+#shop-items-panel {
+    border: round $panel;
+    border-title-color: $warning;
+    border-title-style: bold;
+    border-title-align: left;
+    padding: 1 2;
+    height: 1fr;
+}
+
+#shop-footer {
+    height: auto;
+    margin-top: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOOT SCREEN
+   ══════════════════════════════════════════════════════════════════ */
+
+#loot-box {
+    border: double $warning;
+    border-title-color: $warning;
+    border-title-style: bold;
+    border-title-align: center;
+    padding: 2 4;
+    height: 1fr;
+    content-align: center middle;
+}
+
+.loot-item {
+    margin-top: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EVOLUTION SCREEN
+   ══════════════════════════════════════════════════════════════════ */
+
+.evolution-container {
+    align: center middle;
+    border: double $primary;
+    border-title-color: $accent;
+    border-title-style: bold;
+    border-title-align: center;
+    padding: 2 4;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SHARED STYLES
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Text styles */
+.title       { color: $accent; text-style: bold; }
+.rarity      { color: $primary; text-style: bold; }
+.header      { color: $primary; text-style: bold; }
+.success     { color: $success; text-style: bold; }
+.warning     { color: $warning; text-style: bold; }
+.error       { color: $error; text-style: bold; }
+.dim         { color: $text-muted; }
+
+/* Rarity colors */
+.rarity-common    { color: #9d9d9d; }
+.rarity-uncommon  { color: #9ECE6A; }
+.rarity-rare      { color: #7AA2F7; }
+.rarity-epic      { color: #BB9AF7; }
+.rarity-legendary { color: #FF9E64; }
+
+/* Mood colors */
+.mood-good    { color: $success; }
+.mood-neutral { color: $warning; }
+.mood-bad     { color: $error; }
+
+/* Spacing helpers */
+.mt1 { margin-top: 1; }
+.mb1 { margin-bottom: 1; }
+
+/* Rule dividers */
+Rule {
+    color: $panel;
+    margin: 0;
+}
+
+/* Shared screen box fallback */
+.screen-box {
+    border: heavy $primary;
+    border-title-color: $accent;
+    border-title-style: bold;
+    border-title-align: center;
+    height: 1fr;
+    padding: 1 3;
 }
