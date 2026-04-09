@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from ..constants import C
@@ -15,12 +12,10 @@ from ..dungeon.generator import (
     REST, SHOP, STAIRS, TRAP, TREASURE,
 )
 from ..widgets.dungeon_map import DungeonMap
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
-class DungeonScreen(Screen):
+class DungeonScreen(CodecritterScreen):
     """Main dungeon exploration screen with map and movement."""
 
     BINDINGS = [
@@ -37,7 +32,7 @@ class DungeonScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         w = run.floor.width if run else 5
         h = run.floor.height if run else 5
@@ -69,7 +64,7 @@ class DungeonScreen(Screen):
         self._refresh()
 
     def _refresh(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if not run:
             return
@@ -131,7 +126,7 @@ class DungeonScreen(Screen):
         )
 
     def _handle_room(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if not run:
             return
@@ -189,7 +184,7 @@ class DungeonScreen(Screen):
     def _handle_cursed_chest(self) -> None:
         """Open a cursed chest — 60% rare loot, 40% curse."""
         import random
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if not run:
             return
@@ -231,7 +226,7 @@ class DungeonScreen(Screen):
             self._refresh()
 
     def _move(self, dx: int, dy: int) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if not run:
             return
@@ -261,9 +256,9 @@ class DungeonScreen(Screen):
         self._move(1, 0)
 
     def action_inventory(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.show_inventory()
 
     def action_flee_dungeon(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.end_dungeon(fled=True)

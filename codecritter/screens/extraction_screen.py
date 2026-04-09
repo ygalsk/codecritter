@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from ..constants import C
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
-class ExtractionScreen(Screen):
+class ExtractionScreen(CodecritterScreen):
     """Bank loot at an extraction point, or bank and leave."""
 
     BINDINGS = [
@@ -25,8 +20,7 @@ class ExtractionScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
-        run = app.dungeon_run
+        run = self.capp.dungeon_run
 
         with Vertical(id="extraction-box") as box:
             box.border_title = " EXTRACTION POINT "
@@ -54,24 +48,21 @@ class ExtractionScreen(Screen):
         yield Footer()
 
     def action_bank_continue(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
-        run = app.dungeon_run
+        run = self.capp.dungeon_run
         if run:
             gold, items = run.bank_loot()
-            app.notify(
+            self.capp.notify(
                 f"Banked {gold} gold and {items} items!",
                 title="Loot Secured",
                 timeout=3,
             )
-        app.show_dungeon()
+        self.capp.show_dungeon()
 
     def action_bank_leave(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
-        run = app.dungeon_run
+        run = self.capp.dungeon_run
         if run:
             run.bank_loot()
-        app.end_dungeon(fled=True)
+        self.capp.end_dungeon(fled=True)
 
     def action_back(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
-        app.show_dungeon()
+        self.capp.show_dungeon()

@@ -5,7 +5,7 @@
   "enemies": [
     {
       "id": "buffer_overflow", "name": "Buffer Overflow",
-      "hp": 30, "attack": 9, "defense": 1, "speed": 7,
+      "hp": 42, "attack": 12, "defense": 2, "speed": 7,
       "xp": 9, "gold": 6, "floor_min": 1, "type": "chaos",
       "loot": [["coffee", 0.4], ["rubber_duck", 0.1]],
       "description": "Writes past the end of the array. Writes past the end of reality.",
@@ -14,7 +14,7 @@
     },
     {
       "id": "dangling_pointer", "name": "Dangling Pointer",
-      "hp": 25, "attack": 8, "defense": 2, "speed": 9,
+      "hp": 35, "attack": 10, "defense": 3, "speed": 9,
       "xp": 8, "gold": 5, "floor_min": 1, "type": "debugging",
       "loot": [["coffee", 0.3], ["stack_trace", 0.1]],
       "description": "Points to memory that was freed. Points to nothing. Points to pain.",
@@ -23,7 +23,7 @@
     },
     {
       "id": "use_after_free", "name": "Use-After-Free",
-      "hp": 35, "attack": 7, "defense": 4, "speed": 6,
+      "hp": 48, "attack": 9, "defense": 5, "speed": 6,
       "xp": 12, "gold": 8, "floor_min": 1, "type": "debugging",
       "loot": [["pizza_slice", 0.3], ["try_catch_cloak", 0.08]],
       "description": "The memory was freed. But it remembers. And it's angry.",
@@ -32,7 +32,7 @@
     },
     {
       "id": "undefined_behavior", "name": "Undefined Behavior",
-      "hp": 40, "attack": 12, "defense": 3, "speed": 8,
+      "hp": 55, "attack": 16, "defense": 4, "speed": 8,
       "xp": 16, "gold": 12, "floor_min": 2, "type": "chaos",
       "loot": [["energy_drink", 0.3], ["firewall_vest", 0.08]],
       "description": "The compiler said it was fine. The compiler lied.",
@@ -41,7 +41,7 @@
     },
     {
       "id": "header_hell", "name": "Header Guard Failure",
-      "hp": 45, "attack": 6, "defense": 8, "speed": 4,
+      "hp": 60, "attack": 8, "defense": 10, "speed": 4,
       "xp": 14, "gold": 10, "floor_min": 2, "type": "patience",
       "loot": [["code_review_scroll", 0.2], ["linter_ring", 0.08]],
       "description": "Included 47 times. Redefines everything. Compile time: ∞.",
@@ -50,7 +50,7 @@
     },
     {
       "id": "memory_leak_beast", "name": "The Leak",
-      "hp": 55, "attack": 5, "defense": 6, "speed": 3,
+      "hp": 72, "attack": 7, "defense": 7, "speed": 3,
       "xp": 20, "gold": 16, "floor_min": 3, "type": "patience",
       "loot": [["git_stash", 0.2], ["docker_container", 0.08]],
       "description": "malloc without free. Growing forever. Consuming all.",
@@ -61,7 +61,7 @@
   "bosses": [
     {
       "id": "the_compiler", "name": "The Compiler",
-      "hp": 95, "attack": 13, "defense": 8, "speed": 6,
+      "hp": 140, "attack": 17, "defense": 10, "speed": 6,
       "xp": 50, "gold": 40, "floor_min": 1, "type": "wisdom",
       "loot": [["malloc_mace", 0.5], ["firewall_vest", 0.3]],
       "description": "57 errors. Fix one, get 200 more. It feeds on your corrections.",
@@ -71,7 +71,7 @@
     },
     {
       "id": "the_kernel_panic", "name": "Kernel Panic",
-      "hp": 170, "attack": 16, "defense": 10, "speed": 4,
+      "hp": 250, "attack": 21, "defense": 12, "speed": 4,
       "xp": 85, "gold": 70, "floor_min": 3, "type": "chaos",
       "loot": [["rewrite_hammer", 0.3], ["monolith_plate", 0.2]],
       "description": "Not syncing. Not recovering. Not sorry.",
@@ -81,9 +81,9 @@
     }
   ],
   "traps": [
-    {"id": "stack_smash", "name": "Stack Smashing", "damage_range": [8, 18], "description": "*** stack smashing detected ***: terminated", "effect": null},
-    {"id": "null_deref", "name": "Null Dereference", "damage_range": [10, 20], "description": "Segmentation fault (core dumped)", "effect": "stun"},
-    {"id": "double_free", "name": "Double Free", "damage_range": [5, 12], "description": "free(): double free detected in tcache 2", "effect": null}
+    {"id": "stack_smash", "name": "Stack Smashing", "damage_range": [10, 22], "description": "*** stack smashing detected ***: terminated", "effect": null},
+    {"id": "null_deref", "name": "Null Dereference", "damage_range": [12, 24], "description": "Segmentation fault (core dumped)", "effect": "stun"},
+    {"id": "double_free", "name": "Double Free", "damage_range": [7, 16], "description": "free(): double free detected in tcache 2", "effect": null}
   ],
   "room_descriptions": {
     "empty": [

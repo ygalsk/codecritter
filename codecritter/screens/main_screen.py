@@ -1,23 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.screen import Screen
 from textual.widgets import Footer, Label, ProgressBar
 
 from ..constants import C, STAT_COLORS
 from ..widgets.ascii_art import SnailArt
 from ..widgets.speech_bubble import SpeechBubble
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 STAT_ORDER = ["debugging", "patience", "chaos", "wisdom", "snark"]
 
 
-class MainScreen(Screen):
+class MainScreen(CodecritterScreen):
 
     BINDINGS = [
         ("d", "dungeon", "Dungeon"),
@@ -27,7 +22,7 @@ class MainScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
 
         with VerticalScroll(id="main-box") as main:
@@ -82,8 +77,12 @@ class MainScreen(Screen):
 
     def on_mount(self) -> None:
         self._refresh_dynamic()
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
+
+        # Load reaction into speech bubble
+        speech = self.query_one("#speech-bubble", SpeechBubble)
+        speech.set_reaction(state.reaction, state.reaction_ts)
 
         # Set XP bar
         xp_bar = self.query_one("#xp-bar", ProgressBar)
@@ -97,7 +96,7 @@ class MainScreen(Screen):
             bar.advance(val)
 
     def _refresh_dynamic(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
 
         title_xp = self.query_one("#title-xp-line", Label)
@@ -106,7 +105,7 @@ class MainScreen(Screen):
         )
 
     def refresh_state(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
 
         # Update header
@@ -165,17 +164,17 @@ class MainScreen(Screen):
             pass
 
     def action_dungeon(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.show_dungeon()
 
     def action_inventory(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.show_inventory()
 
     def action_shop(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.show_shop()
 
     def action_quit_app(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.save_and_quit()

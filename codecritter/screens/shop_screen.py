@@ -3,22 +3,18 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from .. import persistence
 from ..constants import C, RARITY_COLORS
 from ..shop import generate_daily_shop, max_tier_for_level
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
-class ShopScreen(Screen):
+class ShopScreen(CodecritterScreen):
 
     BINDINGS = [
         ("b", "back", "Back"),
@@ -47,12 +43,12 @@ class ShopScreen(Screen):
         yield Footer()
 
     def on_mount(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         self._shop_items = generate_daily_shop(app.state.level)
         self._refresh()
 
     def _refresh(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
 
         tier = max_tier_for_level(state.level)
@@ -108,7 +104,7 @@ class ShopScreen(Screen):
         )
 
     def _buy(self, num: int) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
 
         idx = num - 1
@@ -162,5 +158,5 @@ class ShopScreen(Screen):
     def action_buy_9(self) -> None: self._buy(9)
 
     def action_back(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.show_main()

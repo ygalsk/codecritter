@@ -96,7 +96,7 @@ class CombatState:
             defense_bonus += ab
             speed_bonus += ab
 
-        max_hp = 50 + patience * 2
+        max_hp = 30 + patience
         boss_phases = enemy.get("boss_phases", 1)
 
         return cls(
@@ -110,7 +110,7 @@ class CombatState:
             player_attack=base_attack + attack_bonus,
             player_defense=base_defense + defense_bonus,
             player_speed=base_speed + speed_bonus,
-            crit_chance=min(50, chaos // 5),
+            crit_chance=min(25, chaos // 8),
             dodge_chance=min(25, snark // 10),
             weapon_type=weapon_type,
             equipment=dict(equipment),
@@ -203,7 +203,7 @@ class CombatState:
             msg = f"DEBUG MODE! Jamb traces the bug for {damage} guaranteed damage!"
         elif highest_stat == "patience":
             # Heal 25% HP (healing is not affected by type)
-            heal = self.player_max_hp // 4
+            heal = max(5, self.player_max_hp // 6)
             self.player_hp = min(self.player_max_hp, self.player_hp + heal)
             msg = f"MEDITATE! Jamb retreats into shell and heals {heal} HP!"
             eff_label = None  # no type effectiveness on heals
@@ -340,7 +340,7 @@ class CombatState:
             return msg
 
         effective_defense = self.player_defense * (2 if self.defending else 1)
-        damage = max(1, self.enemy_attack - effective_defense + random.randint(-1, 2))
+        damage = max(1, self.enemy_attack - effective_defense + random.randint(-1, 4))
 
         # Apply shield effects on player
         damage, shield_msgs = apply_shield_damage(self.player_effects, damage)
@@ -638,7 +638,7 @@ class DungeonRun:
     @classmethod
     def new_run(cls, stats: dict, equipment: dict, biome: str = "generic") -> DungeonRun:
         patience = stats.get("patience", 0)
-        max_hp = 50 + patience * 2
+        max_hp = 30 + patience
         floor = Floor(number=1)
         floor.generate(biome=biome, stats=stats)
         return cls(floor=floor, hp=max_hp, max_hp=max_hp, biome=biome)
@@ -695,10 +695,9 @@ class DungeonRun:
 
     def rest(self, stats: dict | None = None) -> int:
         """Rest at a rest point. Returns HP healed."""
-        # High patience heals 50% instead of 33%
         patience = (stats or {}).get("patience", 0)
-        ratio = 2 if patience >= 80 else 3
-        heal = min(self.max_hp // ratio, self.max_hp - self.hp)
+        cap = 35 if patience >= 80 else 25
+        heal = min(cap, self.max_hp - self.hp)
         self.hp += heal
         return heal
 

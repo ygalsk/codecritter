@@ -2,23 +2,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Label, RichLog
 
 from ..constants import C, TYPE_COLORS, render_bar
 from ..dungeon.engine import CombatState
 from ..dungeon.items import ITEMS_BY_ID
 from ..dungeon.types import get_effectiveness, effectiveness_label
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
-class BattleScreen(Screen):
+class BattleScreen(CodecritterScreen):
     """Turn-based RPG combat."""
 
     BINDINGS = [
@@ -160,7 +155,7 @@ class BattleScreen(Screen):
                 )
             self.query_one("#action-prompt", Label).update("\n".join(lines))
         else:
-            app: CodecritterApp = self.app  # type: ignore[assignment]
+            app = self.capp
             highest = app.state.stats.highest()
             special_names = {
                 "debugging": "Debug", "patience": "Meditate",
@@ -193,7 +188,7 @@ class BattleScreen(Screen):
 
     def _track_action(self, action: str) -> None:
         """Track player action for playstyle history."""
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if run and action in run.action_counts:
             run.action_counts[action] += 1
@@ -215,7 +210,7 @@ class BattleScreen(Screen):
         self._refresh()
 
     def _end_battle(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         c = self._combat
         if self._fled:
             # Fled — just return to dungeon, HP preserved
@@ -245,7 +240,7 @@ class BattleScreen(Screen):
                 idx = int(event.character) - 1
                 if 0 <= idx < len(self._item_list):
                     inv_idx, item = self._item_list[idx]
-                    app: CodecritterApp = self.app  # type: ignore[assignment]
+                    app = self.capp
                     log_before = len(self._combat.log)
                     self._combat.player_use_item(item, dungeon_run=app.dungeon_run)
                     app.state.inventory_remove(inv_idx, 1)
@@ -266,7 +261,7 @@ class BattleScreen(Screen):
                 idx = int(event.character) - 1
                 if 0 <= idx < len(self._swap_weapons):
                     weapon = self._swap_weapons[idx]
-                    app: CodecritterApp = self.app  # type: ignore[assignment]
+                    app = self.capp
                     old_weapon_id = app.state.equipment.get("weapon")
                     app.state.equipment["weapon"] = weapon["id"]
                     for i, item in enumerate(app.state.inventory):
@@ -314,7 +309,7 @@ class BattleScreen(Screen):
     def action_special(self) -> None:
         if self._awaiting_continue or self._item_selecting:
             return
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         c = self._combat
         self._track_action("special")
         highest = app.state.stats.highest()
@@ -332,7 +327,7 @@ class BattleScreen(Screen):
     def action_talk(self) -> None:
         if self._awaiting_continue or self._item_selecting or self._swap_selecting:
             return
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         c = self._combat
 
         # Only available with high SNARK and non-boss
@@ -359,7 +354,7 @@ class BattleScreen(Screen):
     def action_use_item(self) -> None:
         if self._awaiting_continue or self._swap_selecting or self._item_selecting:
             return
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         consumables = [
             (i, item) for i, item in enumerate(app.state.inventory)
             if item.get("type") == "consumable"
@@ -374,7 +369,7 @@ class BattleScreen(Screen):
     def action_swap_weapon(self) -> None:
         if self._awaiting_continue or self._swap_selecting or self._item_selecting:
             return
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         weapons = [
             item for item in app.state.inventory
             if item.get("type") == "weapon"

@@ -5,7 +5,7 @@
   "enemies": [
     {
       "id": "undefined_is_not_a_function", "name": "undefined",
-      "hp": 20, "attack": 7, "defense": 1, "speed": 8,
+      "hp": 30, "attack": 9, "defense": 2, "speed": 8,
       "xp": 7, "gold": 5, "floor_min": 1, "type": "debugging",
       "loot": [["coffee", 0.4]],
       "description": "Is not a function. Is not an object. Is not anything.",
@@ -14,7 +14,7 @@
     },
     {
       "id": "nan_entity", "name": "NaN",
-      "hp": 25, "attack": 6, "defense": 3, "speed": 6,
+      "hp": 35, "attack": 8, "defense": 4, "speed": 6,
       "xp": 8, "gold": 5, "floor_min": 1, "type": "chaos",
       "loot": [["coffee", 0.3], ["rubber_duck", 0.1]],
       "description": "Not a Number, but typeof says it's a number. Classic.",
@@ -23,7 +23,7 @@
     },
     {
       "id": "callback_demon", "name": "Callback Demon",
-      "hp": 35, "attack": 8, "defense": 4, "speed": 5,
+      "hp": 48, "attack": 11, "defense": 5, "speed": 5,
       "xp": 13, "gold": 9, "floor_min": 2, "type": "patience",
       "loot": [["energy_drink", 0.3], ["try_catch_cloak", 0.08]],
       "description": "Nested 12 levels deep. Each level angrier than the last.",
@@ -32,7 +32,7 @@
     },
     {
       "id": "promise_reject", "name": "Unhandled Rejection",
-      "hp": 30, "attack": 10, "defense": 2, "speed": 9,
+      "hp": 42, "attack": 13, "defense": 3, "speed": 9,
       "xp": 14, "gold": 10, "floor_min": 2, "type": "chaos",
       "loot": [["code_review_scroll", 0.2]],
       "description": "A promise that was never caught. Now it catches you.",
@@ -41,7 +41,7 @@
     },
     {
       "id": "prototype_pollution", "name": "Prototype Polluter",
-      "hp": 45, "attack": 9, "defense": 6, "speed": 5,
+      "hp": 60, "attack": 12, "defense": 7, "speed": 5,
       "xp": 17, "gold": 13, "floor_min": 2, "type": "snark",
       "loot": [["firewall_vest", 0.1], ["ssh_key", 0.08]],
       "description": "Overwrites __proto__ on everything it touches.",
@@ -50,7 +50,7 @@
     },
     {
       "id": "event_loop_blocker", "name": "Event Loop Blocker",
-      "hp": 55, "attack": 7, "defense": 8, "speed": 2,
+      "hp": 72, "attack": 9, "defense": 10, "speed": 2,
       "xp": 20, "gold": 15, "floor_min": 3, "type": "patience",
       "loot": [["git_stash", 0.15], ["ci_amulet", 0.08]],
       "description": "while(true) in the main thread. Everything freezes.",
@@ -61,7 +61,7 @@
   "bosses": [
     {
       "id": "node_modules", "name": "node_modules/",
-      "hp": 100, "attack": 8, "defense": 14, "speed": 1,
+      "hp": 150, "attack": 11, "defense": 17, "speed": 1,
       "xp": 50, "gold": 40, "floor_min": 1, "type": "patience",
       "loot": [["prototype_chain", 0.5], ["docker_container", 0.3]],
       "description": "2.4 GB. 847,000 files. You can't delete it. It IS the project now.",
@@ -71,7 +71,7 @@
     },
     {
       "id": "framework_churn", "name": "The Framework Churn",
-      "hp": 140, "attack": 13, "defense": 7, "speed": 10,
+      "hp": 200, "attack": 17, "defense": 9, "speed": 10,
       "xp": 70, "gold": 55, "floor_min": 3, "type": "chaos",
       "loot": [["rewrite_hammer", 0.3], ["github_copilot", 0.1]],
       "description": "React, Vue, Svelte, Solid, Qwik — it's already obsolete.",
@@ -81,9 +81,9 @@
     }
   ],
   "traps": [
-    {"id": "coercion_trap", "name": "Type Coercion", "damage_range": [5, 15], "description": "[] + {} === '[object Object]'. You take damage from the confusion.", "effect": null},
-    {"id": "this_trap", "name": "Lost 'this' Context", "damage_range": [6, 13], "description": "'this' points somewhere unexpected. It always does.", "effect": "stun"},
-    {"id": "npm_audit_trap", "name": "npm audit", "damage_range": [3, 10], "description": "47 vulnerabilities found. 12 critical. No fixes available.", "effect": null}
+    {"id": "coercion_trap", "name": "Type Coercion", "damage_range": [7, 18], "description": "[] + {} === '[object Object]'. You take damage from the confusion.", "effect": null},
+    {"id": "this_trap", "name": "Lost 'this' Context", "damage_range": [8, 17], "description": "'this' points somewhere unexpected. It always does.", "effect": "stun"},
+    {"id": "npm_audit_trap", "name": "npm audit", "damage_range": [5, 14], "description": "47 vulnerabilities found. 12 critical. No fixes available.", "effect": null}
   ],
   "room_descriptions": {
     "empty": [

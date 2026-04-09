@@ -3,21 +3,17 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from ..constants import C
 from ..dungeon.generator import ENEMY, REST, TRAP, TREASURE
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
-class ForkScreen(Screen):
+class ForkScreen(CodecritterScreen):
     """Present a blind choice between two paths."""
 
     BINDINGS = [
@@ -50,7 +46,7 @@ class ForkScreen(Screen):
         if index >= len(self._options):
             return
 
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if not run:
             return
@@ -96,5 +92,5 @@ class ForkScreen(Screen):
         self._resolve(1)
 
     def action_back(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.show_dungeon()

@@ -5,7 +5,7 @@
   "enemies": [
     {
       "id": "lifetime_error", "name": "Lifetime Error",
-      "hp": 28, "attack": 6, "defense": 4, "speed": 5,
+      "hp": 38, "attack": 8, "defense": 5, "speed": 5,
       "xp": 9, "gold": 6, "floor_min": 1, "type": "patience",
       "loot": [["coffee", 0.4], ["rubber_duck", 0.1]],
       "description": "Expected lifetime 'a, found lifetime 'b. They're different. Somehow.",
@@ -14,7 +14,7 @@
     },
     {
       "id": "moved_value", "name": "Moved Value",
-      "hp": 24, "attack": 8, "defense": 2, "speed": 7,
+      "hp": 34, "attack": 10, "defense": 3, "speed": 7,
       "xp": 8, "gold": 5, "floor_min": 1, "type": "debugging",
       "loot": [["coffee", 0.3], ["stack_trace", 0.08]],
       "description": "Used after move. The value is gone. It was never yours.",
@@ -23,7 +23,7 @@
     },
     {
       "id": "trait_bound", "name": "Unsatisfied Trait Bound",
-      "hp": 35, "attack": 5, "defense": 6, "speed": 4,
+      "hp": 48, "attack": 7, "defense": 7, "speed": 4,
       "xp": 12, "gold": 8, "floor_min": 1, "type": "wisdom",
       "loot": [["pizza_slice", 0.3], ["design_doc", 0.08]],
       "description": "T does not implement Display + Clone + Send + Sync + 'static.",
@@ -32,7 +32,7 @@
     },
     {
       "id": "borrow_conflict", "name": "Mutable Borrow Conflict",
-      "hp": 40, "attack": 9, "defense": 5, "speed": 6,
+      "hp": 55, "attack": 12, "defense": 6, "speed": 6,
       "xp": 15, "gold": 11, "floor_min": 2, "type": "patience",
       "loot": [["energy_drink", 0.3], ["ci_amulet", 0.08]],
       "description": "Cannot borrow as mutable more than once. The rules are absolute.",
@@ -41,7 +41,7 @@
     },
     {
       "id": "unsafe_block", "name": "Unsafe Block",
-      "hp": 50, "attack": 14, "defense": 2, "speed": 9,
+      "hp": 68, "attack": 18, "defense": 3, "speed": 9,
       "xp": 18, "gold": 14, "floor_min": 2, "type": "chaos",
       "loot": [["firewall_vest", 0.1], ["regex_sword", 0.05]],
       "description": "unsafe { /* trust me */ } — Famous last words.",
@@ -50,7 +50,7 @@
     },
     {
       "id": "type_system_hydra", "name": "Generic Type Hydra",
-      "hp": 55, "attack": 7, "defense": 8, "speed": 4,
+      "hp": 72, "attack": 9, "defense": 10, "speed": 4,
       "xp": 20, "gold": 16, "floor_min": 3, "type": "wisdom",
       "loot": [["git_stash", 0.15], ["architecture_wand", 0.05]],
       "description": "Where T: IntoIterator<Item = Box<dyn Fn(&mut Vec<Option<Result<T, E>>>)>>",
@@ -61,7 +61,7 @@
   "bosses": [
     {
       "id": "the_borrow_checker", "name": "The Borrow Checker",
-      "hp": 110, "attack": 10, "defense": 14, "speed": 5,
+      "hp": 160, "attack": 13, "defense": 17, "speed": 5,
       "xp": 55, "gold": 45, "floor_min": 1, "type": "patience",
       "loot": [["ownership_blade", 0.5], ["kubernetes_armor", 0.25]],
       "description": "The final arbiter of ownership. Fair, strict, and absolutely merciless.",
@@ -71,7 +71,7 @@
     },
     {
       "id": "the_orphan_rule", "name": "The Orphan Rule",
-      "hp": 155, "attack": 13, "defense": 11, "speed": 4,
+      "hp": 225, "attack": 17, "defense": 13, "speed": 4,
       "xp": 80, "gold": 65, "floor_min": 3, "type": "wisdom",
       "loot": [["rewrite_hammer", 0.3], ["github_copilot", 0.1]],
       "description": "You cannot implement a foreign trait on a foreign type. No exceptions. No mercy.",
@@ -81,9 +81,9 @@
     }
   ],
   "traps": [
-    {"id": "unwrap_trap", "name": "Unwrap on None", "damage_range": [8, 16], "description": "Called .unwrap() on a None value. Thread panicked.", "effect": "stun"},
-    {"id": "deadlock_trap", "name": "Mutex Deadlock", "damage_range": [5, 12], "description": "Two mutexes, locked in the wrong order. Everything stops.", "effect": null},
-    {"id": "turbofish_trap", "name": "Turbofish Syntax", "damage_range": [4, 10], "description": "::<> — The turbofish bites!", "effect": null}
+    {"id": "unwrap_trap", "name": "Unwrap on None", "damage_range": [10, 20], "description": "Called .unwrap() on a None value. Thread panicked.", "effect": "stun"},
+    {"id": "deadlock_trap", "name": "Mutex Deadlock", "damage_range": [7, 16], "description": "Two mutexes, locked in the wrong order. Everything stops.", "effect": null},
+    {"id": "turbofish_trap", "name": "Turbofish Syntax", "damage_range": [6, 14], "description": "::<> — The turbofish bites!", "effect": null}
   ],
   "room_descriptions": {
     "empty": [

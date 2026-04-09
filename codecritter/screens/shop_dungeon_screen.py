@@ -3,24 +3,20 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from ..constants import C, RARITY_COLORS
 from ..dungeon.items import items_by_rarity
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
 MAP_REVEAL_COST = 20
 
 
-class DungeonShopScreen(Screen):
+class DungeonShopScreen(CodecritterScreen):
     """Buy items from a dungeon vendor."""
 
     BINDINGS = [
@@ -57,7 +53,7 @@ class DungeonShopScreen(Screen):
             self._stock.append(item)
 
     def compose(self) -> ComposeResult:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
 
         with Vertical(id="dungeon-shop-box") as box:
@@ -93,8 +89,21 @@ class DungeonShopScreen(Screen):
 
         yield Footer()
 
+    @staticmethod
+    def _spend_gold(run: object, amount: int) -> bool:
+        """Spend gold from un-banked first, then banked. Returns True if affordable."""
+        if run.gold_earned >= amount:
+            run.gold_earned -= amount
+        elif run.gold_earned + run.banked_gold >= amount:
+            remainder = amount - run.gold_earned
+            run.gold_earned = 0
+            run.banked_gold -= remainder
+        else:
+            return False
+        return True
+
     def _try_buy(self, index: int) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if not run or index >= len(self._stock):
             return
@@ -102,14 +111,7 @@ class DungeonShopScreen(Screen):
         item = self._stock[index]
         price = item.get("shop_price", item.get("value", 10))
 
-        # Spend from un-banked gold first
-        if run.gold_earned >= price:
-            run.gold_earned -= price
-        elif run.gold_earned + run.banked_gold >= price:
-            remainder = price - run.gold_earned
-            run.gold_earned = 0
-            run.banked_gold -= remainder
-        else:
+        if not self._spend_gold(run, price):
             app.notify("Not enough gold!", severity="warning", timeout=2)
             return
 
@@ -132,22 +134,14 @@ class DungeonShopScreen(Screen):
         self._try_buy(2)
 
     def action_buy_map(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         run = app.dungeon_run
         if not run:
             return
 
-        total_gold = run.gold_earned + run.banked_gold
-        if total_gold < MAP_REVEAL_COST:
+        if not self._spend_gold(run, MAP_REVEAL_COST):
             app.notify("Not enough gold!", severity="warning", timeout=2)
             return
-
-        if run.gold_earned >= MAP_REVEAL_COST:
-            run.gold_earned -= MAP_REVEAL_COST
-        else:
-            remainder = MAP_REVEAL_COST - run.gold_earned
-            run.gold_earned = 0
-            run.banked_gold -= remainder
 
         # Reveal all rooms
         for row in run.floor.rooms:
@@ -157,5 +151,5 @@ class DungeonShopScreen(Screen):
         app.notify("Map revealed!", timeout=2)
 
     def action_back(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         app.show_dungeon()

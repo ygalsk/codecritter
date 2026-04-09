@@ -2,18 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from ..constants import C, RARITY_COLORS, TYPE_COLORS
 from ..dungeon.items import ITEMS_BY_ID
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 SLOT_LABELS = {"weapon": "Weapon", "armor": "Armor", "accessory": "Accessory"}
 SLOT_KEYS = list(SLOT_LABELS.keys())
@@ -81,7 +76,7 @@ def _item_detail_lines(item: dict) -> list[str]:
     return lines
 
 
-class InventoryScreen(Screen):
+class InventoryScreen(CodecritterScreen):
 
     BINDINGS = [
         ("b", "back", "Back"),
@@ -136,7 +131,7 @@ class InventoryScreen(Screen):
         self._refresh()
 
     def _refresh(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
 
         slots_used = state.inventory_slot_count()
@@ -287,7 +282,7 @@ class InventoryScreen(Screen):
     def action_unequip_focused(self) -> None:
         if self._equip_focus is None:
             return
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
         item_id = state.equipment.get(self._equip_focus)
         if not item_id:
@@ -308,7 +303,7 @@ class InventoryScreen(Screen):
         self._refresh()
 
     def _select(self, num: int) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         self._equip_focus = None
         start = self._page * self._items_per_page
         idx = start + num - 1
@@ -320,7 +315,7 @@ class InventoryScreen(Screen):
         self._refresh()
 
     def _equip_item(self, idx: int) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
 
         if idx >= len(state.inventory):
@@ -357,7 +352,7 @@ class InventoryScreen(Screen):
             return
         if self._selected is None:
             return
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
         if self._selected >= len(state.inventory):
             return
@@ -377,7 +372,7 @@ class InventoryScreen(Screen):
         self._refresh()
 
     def _sell_equipped(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         state = app.state
         item_id = state.equipment.get(self._equip_focus)
         if not item_id:
@@ -401,7 +396,7 @@ class InventoryScreen(Screen):
             self._selected = None
             self._refresh()
         elif event.key == "right":
-            app: CodecritterApp = self.app  # type: ignore[assignment]
+            app = self.capp
             total_pages = (len(app.state.inventory) + self._items_per_page - 1) // self._items_per_page
             if self._page < total_pages - 1:
                 self._page += 1
@@ -439,7 +434,7 @@ class InventoryScreen(Screen):
         self._select(10)
 
     def action_back(self) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
+        app = self.capp
         if app.dungeon_run:
             app.show_dungeon()
         else:

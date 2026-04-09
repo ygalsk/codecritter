@@ -240,8 +240,10 @@ class Floor:
             room.description = rng.choice(room_descs.get(TREASURE, ROOM_DESCRIPTIONS[TREASURE]))
 
         # ── Rest point (skip if Cursed modifier) ────────────
+        # Rest rooms guaranteed on odd floors, 50% chance on even floors
         no_rest = modifier_effects.get("no_rest", False)
-        if not no_rest and open_cells:
+        rest_chance = 1.0 if self.number % 2 == 1 else 0.5
+        if not no_rest and open_cells and rng.random() < rest_chance:
             x, y = open_cells.pop(0)
             room = self.rooms[y][x]
             room.room_type = REST

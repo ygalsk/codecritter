@@ -1,20 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from ..constants import C, EVOLUTION_MESSAGES, EVOLUTION_NAMES, SPECIES_EVOLUTION
 from ..widgets.ascii_art import SnailArt
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
-class EvolutionScreen(Screen):
+class EvolutionScreen(CodecritterScreen):
     """One-time evolution announcement overlay."""
 
     def __init__(self, new_stage: str, **kwargs) -> None:
@@ -22,8 +17,7 @@ class EvolutionScreen(Screen):
         self._new_stage = new_stage
 
     def compose(self) -> ComposeResult:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
-        state = app.state
+        state = self.capp.state
         new_stage = self._new_stage
 
         spec = state.stats.highest() if new_stage == "adult" else None
@@ -49,5 +43,4 @@ class EvolutionScreen(Screen):
         yield Footer()
 
     def on_key(self, event) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
-        app.show_main()
+        self.capp.show_main()

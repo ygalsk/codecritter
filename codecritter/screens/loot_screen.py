@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Label
 
 from ..constants import C, RARITY_COLORS
-
-if TYPE_CHECKING:
-    from ..app import CodecritterApp
+from .base import CodecritterScreen
 
 
-class LootScreen(Screen):
+class LootScreen(CodecritterScreen):
     """Display loot from treasure or battle."""
 
     def __init__(self, loot: dict, **kwargs) -> None:
@@ -77,5 +72,4 @@ class LootScreen(Screen):
         yield Footer()
 
     def on_key(self, event) -> None:
-        app: CodecritterApp = self.app  # type: ignore[assignment]
-        app.show_dungeon()
+        self.capp.show_dungeon()
